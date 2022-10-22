@@ -1,4 +1,6 @@
 API_SEARCH_PROJECTS = "/rest/api/3/project/search"
 API_SEARCH_ISSUES = "/rest/api/3/issue/picker"
-API_GET_ISSUE_FIELDS = "/rest/api/3/issue/"
- 
+API_ISSUES = "/rest/api/3/issue/"
+API_SEARCH_FIELDS = "/rest/api/3/field/search" 
+API_CREATE_ISSUE_METADATA = "/rest/api/3/issue/createmeta"
+API_MY_PERMISSIONS = "/rest/api/3/mypermissions"
