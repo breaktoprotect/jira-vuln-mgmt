@@ -1,0 +1,12 @@
+name: Jira Vuln Management Reporting Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  test-called-workflow:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Say hello
+        run: echo "Hello, you have called a workflow?"
