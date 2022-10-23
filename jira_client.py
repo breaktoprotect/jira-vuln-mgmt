@@ -5,11 +5,13 @@ Description:
 - Simple API client to the Jira REST API services
 - This API client is designed for Jira cloud API v3
 """
+import json
 import os
 import requests
 from requests.auth import HTTPBasicAuth
 
 import jira_vuln_model as MODEL
+import custom_fields as CUSTOM
 
 from api_v3_endpoints import *
 
@@ -84,6 +86,7 @@ def get_issue_fields(issue_key):
 
 #* Create a vulnerability jira issue
 def create_jira_vuln(vuln):
+    # Minimum fields to post the jira
     json_post = {
         "fields": {
             "summary": vuln.summary,
@@ -93,12 +96,31 @@ def create_jira_vuln(vuln):
             "project": {
                 "id": vuln.project_id
             },
-            "reporter": { "id": "5b2f82cc55b2312db2b866e6"}
-            
+            "reporter": { 
+                "id": vuln.reporter
+            }
         }
     }
-    # Additional custom fields
-    #TODO json_post['']
+    # Additional fields including custom
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['CVE ID']] = vuln.cve_id
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Raw Severity']] = {
+        "value": vuln.raw_severity
+    }
+    """ json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Assessed Severity']] = {
+        "value": vuln.assessed_severity
+    } """
+    #json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Status Expiry']] = vuln.status_expiry
+
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Reported Date']] = vuln.reported_date
+
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Source']] = {
+        "value": vuln.source
+    }
+    json_post["fields"]["components"] = [
+        {
+            "name": vuln.component
+        }
+    ]
 
     this_headers = {
         "Content-Type":"application/json"
@@ -123,11 +145,11 @@ if __name__ == "__main__":
             if issuetype['fields'][key]['required'] == True:
                 print("{KEY:20} - {NAME}".format(KEY=key, NAME=issuetype['fields'][key]['name'])) """
 
-    # Test create issue
-    vuln = MODEL.Vuln(summary="test summary", project_id=search_project_id("VuLN") )
-    print(vuln.project_id)
-    print(create_jira_vuln(vuln))
+    
+    print("meta_fields_dict:", get_metadata_create_issue("vuln")['projects'][0]["issuetypes"][0]['fields'])
 
+
+    #debug #! ENDS HERE
     sys.exit(-1)
 
     # 1. Init 

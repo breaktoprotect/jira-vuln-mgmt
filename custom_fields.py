@@ -1,6 +1,6 @@
 #
 #* Custom fields
-# To be grabbed dynamically from Jira Software (Cloud)
+# To be retrieved dynamically from Jira Software (Cloud)
 CUSTOM_FIELDS_TO_ID = {
     "Reported Date": None,
     "Raw Severity": None,
@@ -12,4 +12,29 @@ CUSTOM_FIELDS_TO_ID = {
 
 STANDARD_FIELDS = {
     "Components": None
+}
+
+FIELD_SOURCE_OPTIONS_ID = {
+    "SAST": None,
+    "DAST": None,
+    "SCA": None,
+    "Secret Detection": None,
+    "Trivy Config": None
+    # There are alot more - to be added later~
+}
+
+FIELD_RAW_SEVERITY_OPTIONS_ID = {
+    "Critical": None,
+    "High": None,
+    "Medium": None,
+    "Low": None,
+    "None (Informational)": None
+}
+
+FIELD_RAW_SEVERITY_OPTIONS_ID = {
+    "Critical": None,
+    "High": None,
+    "Medium": None,
+    "Low": None,
+    "None (Informational)": None
 }
