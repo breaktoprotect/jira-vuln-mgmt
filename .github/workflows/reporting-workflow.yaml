@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Say hello
         run: echo "Hello, you have called a workflow?"
-
+      - uses: actions/download-artifact@v3
+        with:
+          name: trivy-results
       - name: Python script to report findings from trivy-results.sarif
         run: ls -alh
