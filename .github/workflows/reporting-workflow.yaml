@@ -14,5 +14,8 @@ jobs:
       - name: Say hello
         run: echo "Hello, you have called a workflow?"
 
-      - name: Print output (testing only)
-        run: echo "${{inputs.trivy-results}}"
+      - name: (DEBUG) Print output
+        run: cat "${{inputs.trivy-results}}" >> trivy-results.sarif
+      
+      - name: Python script to report findings from trivy-results.sarif
+        run: ls -alh
