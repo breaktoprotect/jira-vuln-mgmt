@@ -11,4 +11,4 @@ jobs:
         run: echo "Hello, you have called a workflow?"
 
       - name: Print output (testing only)
-        run: echo ${{needs.vuln-scan.outputs.output1}}
+        run: echo "${{needs.vuln-scan.outputs.output1}}""
