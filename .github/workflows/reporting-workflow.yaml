@@ -9,3 +9,6 @@ jobs:
     steps:
       - name: Say hello
         run: echo "Hello, you have called a workflow?"
+
+      - name: Print output (testing only)
+        run: echo needs.vuln-scan.outputs.output1
