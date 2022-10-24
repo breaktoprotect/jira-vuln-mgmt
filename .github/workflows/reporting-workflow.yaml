@@ -2,6 +2,10 @@ name: Jira Vuln Management Reporting Workflow
 
 on:
   workflow_call:
+    inputs:
+      trivy-results:
+        required: true
+        type: string
 
 jobs:
   test-called-workflow:
@@ -11,4 +15,4 @@ jobs:
         run: echo "Hello, you have called a workflow?"
 
       - name: Print output (testing only)
-        run: echo "${{needs.vuln-scan.outputs.output1}}""
+        run: echo "${{inputs.trivy-results}}""
