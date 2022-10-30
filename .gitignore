@@ -1,5 +1,7 @@
 # JS
 *.json
+*.sarif
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
