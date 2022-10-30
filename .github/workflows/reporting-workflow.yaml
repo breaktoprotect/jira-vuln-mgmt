@@ -6,6 +6,11 @@ on:
       artifact-name:
         required: true
         type: string
+    secrets:
+      env-api-host:
+        required: true
+      env-jira-access-token:
+        required: true
 
 jobs:
   jira-vuln-reporting:
