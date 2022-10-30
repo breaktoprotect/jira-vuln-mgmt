@@ -30,6 +30,7 @@ jobs:
         run: ls -alh
 
       - name: Set up environment
+        run: echo Nothing
         env:
           API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}
           API_HOSTNAME: ${{ secrets.env-api-host }}
