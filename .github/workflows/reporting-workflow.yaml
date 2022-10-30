@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: inputs.artifact-name
+          name: ${{ inputs.artifact-name }}
 
       - name: Python script to report findings from trivy-results.sarif
-        run: python3 sarif_to_jira_action.py 
+        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c Infrastructure -r jeremyspk@gmail.com
