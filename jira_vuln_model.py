@@ -13,7 +13,7 @@ class Vuln(object):
     project_id: int
     summary: str
     description: str
-    reporter: str
+    reporter_id: str
     source: str
     cve_id: str
     raw_severity: str

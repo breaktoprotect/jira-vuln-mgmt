@@ -5,6 +5,7 @@ Description:
 - Simple API client to the Jira REST API services
 - This API client is designed for Jira cloud API v3
 """
+from email import header
 import json
 import os
 import requests
@@ -36,6 +37,11 @@ def search_project_id(key):
                 return item['id']
 
     return None
+
+def search_users_by_email(query):
+    response = requests.get(API_HOSTNAME + API_SEARCH_USERS + "?query=" + query, headers=HEADERS, auth=AUTH)
+
+    return response.json() 
 
 def search_custom_fields():
     params = {
@@ -90,6 +96,16 @@ def create_jira_vuln(vuln):
     json_post = {
         "fields": {
             "summary": vuln.summary,
+            "description": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": vuln.description
+                    }
+                ]
+            },
             "issuetype": {
                 "id": 10008
             },
@@ -97,7 +113,7 @@ def create_jira_vuln(vuln):
                 "id": vuln.project_id
             },
             "reporter": { 
-                "id": vuln.reporter
+                "id": vuln.reporter_id
             }
         }
     }
@@ -122,13 +138,18 @@ def create_jira_vuln(vuln):
         }
     ]
 
+    #debug
+    print(">>>> json_post:", json_post)
+
     this_headers = {
         "Content-Type":"application/json"
     }
 
     response = requests.post(API_HOSTNAME + API_ISSUES, json=json_post, headers=this_headers,auth=AUTH)
 
-    return response.text
+    return response
+
+#? Helper functions
 
 
 #! Testing only

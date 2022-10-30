@@ -19,7 +19,7 @@ FIELD_SOURCE_OPTIONS_ID = {
     "DAST": None,
     "SCA": None,
     "Secret Detection": None,
-    "Trivy Config": None
+    "Trivy": None
     # There are alot more - to be added later~
 }
 
