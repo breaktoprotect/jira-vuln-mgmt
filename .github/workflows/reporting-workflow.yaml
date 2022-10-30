@@ -2,17 +2,21 @@ name: Jira Vuln Management Reporting Workflow
 
 on:
   workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
 
 jobs:
-  test-called-workflow:
+  jira-vuln-reporting:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Say hello
-        run: echo "Hello, you have called a workflow?"
+
       - uses: actions/download-artifact@v3
         with:
-          name: trivy-results
+          name: inputs.artifact-name
+
       - name: Python script to report findings from trivy-results.sarif
-        run: ls -alh
+        run: python3 sarif_to_jira_action.py 
