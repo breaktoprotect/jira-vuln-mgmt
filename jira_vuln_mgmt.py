@@ -75,25 +75,6 @@ def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CU
     map_id_to_fields(meta_fields_dict, custom_fields_id_dict)
 
 
-""" def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
-    # Get 'Source' field's key (customfield_...)
-    Source_key = CUSTOM.CUSTOM_FIELDS_TO_ID['Source']
-
-    # Find the id for each of the corresponding source field options
-    for key in field_source_options_id:
-        if key in meta_fields_dict[Source_key]['allowedValues']:
-            continue # skip if field is not currently added/supported to 'Source' in Jira software
-        for option in meta_fields_dict[Source_key]['allowedValues']:
-            if key == option['value']:
-                field_source_options_id[key] = option['id']
-
-def populate_raw_sev_options_id(meta_fields_dict, field_sev_options_id=CUSTOM.FIELD_RAW_SEVERITY_OPTIONS_ID):
-    pass
-
-def populate_components_options_id():
-    #todo
-    pass """
-
 def map_id_to_fields(meta_fields_dict, fields_to_populate_id):
     for field in fields_to_populate_id:
         for meta_field in meta_fields_dict:
@@ -115,6 +96,26 @@ def severity_num_to_qualitative(num_rating):
         return "High"
     else:
         return "Critical"
+
+# Potentially usable code in future
+""" def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
+    # Get 'Source' field's key (customfield_...)
+    Source_key = CUSTOM.CUSTOM_FIELDS_TO_ID['Source']
+
+    # Find the id for each of the corresponding source field options
+    for key in field_source_options_id:
+        if key in meta_fields_dict[Source_key]['allowedValues']:
+            continue # skip if field is not currently added/supported to 'Source' in Jira software
+        for option in meta_fields_dict[Source_key]['allowedValues']:
+            if key == option['value']:
+                field_source_options_id[key] = option['id']
+
+def populate_raw_sev_options_id(meta_fields_dict, field_sev_options_id=CUSTOM.FIELD_RAW_SEVERITY_OPTIONS_ID):
+    pass
+
+def populate_components_options_id():
+    #todo
+    pass """
 
 #! Testing only
 if __name__ == "__main__":
