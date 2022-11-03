@@ -8,7 +8,7 @@ import argparse
 import json
 import jira_vuln_mgmt as JIRA_VULN
 import datetime
-import hashlib
+
 
 #? Config
 PROJECT_KEY = "vuln"
@@ -47,7 +47,7 @@ def workflow(sarif_filepath, component, reporter_email):
             cve_id = rule['id']
             raw_severity=JIRA_VULN.severity_num_to_qualitative(float(rule['properties']['security-severity']))
             reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
-            issue_digest = calc_issue_digest(summary, description, cve_id, component)
+            issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
 
             vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
             vuln_list.append(vuln)
@@ -99,13 +99,7 @@ def get_affected_location_lines(location_list):
 
     return affected_locations
 
-#* Calculate a message digest for issue
-def calc_issue_digest(summary, description, cve_id, component):
-    hash = hashlib.sha256()
-    overall_str = (summary + str(description) + cve_id + component).encode('utf-8')
-    hash.update(overall_str)
-    
-    return hash.hexdigest()
+
 
 #! for testing only
 if __name__ == "__main__":

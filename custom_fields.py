@@ -7,7 +7,8 @@ CUSTOM_FIELDS_TO_ID = {
     "Assessed Severity": None,
     "CVE ID": None,
     "Source": None,
-    "Status Expiry": None,   
+    "Status Expiry": None,
+    "Issue Digest": None
 }
 
 STANDARD_FIELDS = {
