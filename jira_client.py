@@ -76,7 +76,7 @@ def jql_search_issues(jql):
     }
     response = requests.post(API_HOSTNAME + API_JQL_SEARCH_ISSUES, json=params, headers=HEADERS, auth=AUTH)
 
-    return response.json()
+    return response
     
 
 #* Retrieve Metadata for Create Issue
@@ -147,6 +147,8 @@ def create_jira_vuln(vuln):
             "name": vuln.component
         }
     ]
+
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] = vuln.issue_digest
 
     #debug
     print(">>>> json_post:", json_post)

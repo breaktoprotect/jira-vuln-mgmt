@@ -21,5 +21,7 @@ class Vuln(object):
     #status_expiry: str - this is not a generated field. Only used for False Positive or Risk Acceptance tracking
     reported_date: str # Must be "yyyy-MM-dd"
     component: str
+    issue_digest: str # SHA-256
+
 
     

@@ -13,8 +13,8 @@ import jira_vuln_model as JIRA_MODEL
 def report_vuln_list(vuln_list, project_key):
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
-    project_id = JIRA_CLIENT.search_project_id(project_key)
-    all_list_of_issues = get_matching_issues(project_id, "") #! Empty string means get all issues? Check again
+    """ project_id = JIRA_CLIENT.search_project_id(project_key)
+    all_list_of_issues = get_matching_issues(project_id, "")  """#! Empty string means get all issues? Check again
 
     # 2. Duplicate check - ignore vulns that are already reported
     no_dup_vuln_list = []
@@ -44,7 +44,7 @@ def report_vuln(vuln):
 
 #* Create a vuln instance
 #   reported_date: YYYY-MM-DD
-def create_vuln(summary, project_key, description, reporter_email, source, cve_id, raw_severity, reported_date, component):
+def create_vuln(summary, project_key, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest):
     project_id = JIRA_CLIENT.search_project_id(project_key)
     reporter_id = get_reporter_account_id(reporter_email)
 
@@ -57,7 +57,8 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
             cve_id=cve_id,
             raw_severity=raw_severity,
             reported_date=reported_date,
-            component=component
+            component=component,
+            issue_digest=issue_digest
     )
     return vuln
 
@@ -74,7 +75,8 @@ def is_duplicate_finding(vuln):
     )
 
     #debug
-    print(response)
+    print(response.json())
+    print(response.status_code)
 
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
@@ -154,16 +156,7 @@ if __name__ == "__main__":
 
     # Test
     project_id = JIRA_CLIENT.search_project_id("vuln")
-    vuln = JIRA_MODEL.Vuln(
-        summary=DS005_Misconfiguration, 
-        project_id=project_id,  
-        description="",
-        reporter_id=reporter_id,
-        source=source,
-        cve_id=cve_id,
-        raw_severity=raw_severity,
-        reported_date=reported_date,
-        component=component
-    )
+    vuln = JIRA_MODEL.Vuln(project_id='10001', summary='DS002_Misconfiguration', description=[{'type': 'text', 'text': 'Running containers with &#39;root&#39; user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a &#39;USER&#39; statement to the Dockerfile.'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Artifact: Dockerfile\nType: dockerfile\nVulnerability DS002\nSeverity: HIGH\nMessage: Specify at least 1 USER command in Dockerfile with non-root user as argument\nLink: [DS002](https://avd.aquasec.com/misconfig/ds002)'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Affected component: \nDockerfile (from Line: 1 to 1)\n'}], reporter_id='5b2f82cc55b2312db2b866e6', source='Trivy', cve_id='DS002', raw_severity='High', reported_date='2022-11-03', component='Infrastructure')
+
     is_duplicate_finding(vuln)
     
