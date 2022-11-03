@@ -8,14 +8,19 @@ import jira_client as JIRA_CLIENT
 import custom_fields as CUSTOM
 import jira_vuln_model as JIRA_MODEL
 
-#? Config
-#PROJECT_KEY = "VULN" #e.g. VULN-123 on Jira
-
 #* ***** Core Features *****
 #* Report multiple vuln issues using a list of vuln objects on Jira
 def report_vuln_list(vuln_list, project_key):
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
+
+    # 2. Duplicate check - ignore vulns that are already reported
+    #TODO
+    nodup_vuln_list = []
+    for vuln in vuln_list:
+        pass
+
+    # 3. Close vulns that are no longer found
 
     # 2. Report each vuln on the list
     for vuln in vuln_list:
@@ -53,6 +58,8 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
             component=component
     )
     return vuln
+
+#* 
 
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
