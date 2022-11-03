@@ -27,10 +27,10 @@ jobs:
           name: ${{ inputs.artifact-name }}
           
       - name: debug
-        run: ls -alh
+        run: echo ${{ github.ref }}
 
       - name: Python script to report findings from trivy-results.sarif
-        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c Infrastructure -r jeremyspk@gmail.com
+        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.ref }} -r jeremyspk@gmail.com
         env:
           API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}
           API_HOSTNAME: ${{ secrets.env-api-host }}
