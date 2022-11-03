@@ -60,7 +60,7 @@ def get_matching_issues(project_id, query):
         "currentProjectId":project_id,
         "query":query
     }
-    response = requests.get(API_HOSTNAME + API_SEARCH_ISSUES, params=params, headers=HEADERS,auth=AUTH)
+    response = requests.get(API_HOSTNAME + API_PICK_ISSUES, params=params, headers=HEADERS,auth=AUTH)
     
     matched_issue_key_list = []
     for section in response.json()['sections']:
@@ -68,6 +68,16 @@ def get_matching_issues(project_id, query):
             matched_issue_key_list.append(issue['key'])
 
     return matched_issue_key_list
+
+def jql_search_issues(jql):
+    params = {
+        "jql": jql,
+        "maxResults": 999999
+    }
+    response = requests.post(API_HOSTNAME + API_JQL_SEARCH_ISSUES, json=params, headers=HEADERS, auth=AUTH)
+
+    return response.json()
+    
 
 #* Retrieve Metadata for Create Issue
 def get_metadata_create_issue(project_key):

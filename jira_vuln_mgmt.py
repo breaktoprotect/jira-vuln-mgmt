@@ -13,11 +13,13 @@ import jira_vuln_model as JIRA_MODEL
 def report_vuln_list(vuln_list, project_key):
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
+    project_id = JIRA_CLIENT.search_project_id(project_key)
+    all_list_of_issues = get_matching_issues(project_id, "") #! Empty string means get all issues? Check again
 
     # 2. Duplicate check - ignore vulns that are already reported
-    #TODO
-    nodup_vuln_list = []
+    no_dup_vuln_list = []
     for vuln in vuln_list:
+
         pass
 
     # 3. Close vulns that are no longer found
@@ -60,6 +62,19 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
     return vuln
 
 #* 
+
+#* Duplication check
+#  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
+#TODO currently it is 1 new issue per request to verify existence of existing finding - is there a better way?
+def is_duplicate_finding(vuln):
+    response = JIRA_CLIENT.jql_search_issues(
+        'project = "VULN and ' +
+        'summary = {SUMMARY} and '.format(SUMMARY=vuln.summary) + 
+        'description = {DESC}'.format(DESC=vuln.description)
+    )
+
+    #debug
+    print(response)
 
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
@@ -127,6 +142,28 @@ def populate_components_options_id():
 #! Testing only
 if __name__ == "__main__":
     init_all_fields_id("VULN")
-
     print(CUSTOM.CUSTOM_FIELDS_TO_ID)
     print(CUSTOM.FIELD_SOURCE_OPTIONS_ID)
+
+    # Get all issues
+    """ 
+    query = ""
+    all_issues_list = JIRA_CLIENT.jql_search_issues('project="VULN" AND status != "Closed"')
+    print(all_issues_list)
+    print("length of all_issue_list:", len(all_issues_list)) """
+
+    # Test
+    project_id = JIRA_CLIENT.search_project_id("vuln")
+    vuln = JIRA_MODEL.Vuln(
+        summary=DS005_Misconfiguration, 
+        project_id=project_id,  
+        description="",
+        reporter_id=reporter_id,
+        source=source,
+        cve_id=cve_id,
+        raw_severity=raw_severity,
+        reported_date=reported_date,
+        component=component
+    )
+    is_duplicate_finding(vuln)
+    
