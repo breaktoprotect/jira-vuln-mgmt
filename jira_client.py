@@ -10,6 +10,7 @@ import json
 import os
 import requests
 from requests.auth import HTTPBasicAuth
+import html
 
 import jira_vuln_model as MODEL
 import custom_fields as CUSTOM
@@ -22,6 +23,12 @@ HEADERS = {
     "Accept": "application/json"
 }
 AUTH = HTTPBasicAuth("jeremyspk@gmail.com", os.environ['API_ACCESS_TOKEN'])
+
+#? Symbols escape list
+TO_ESCAPE_LIST = [{
+        'original': 'â€¦',
+        'replacement': '...'
+    }]
 
 def search_project_id(key):
     key = key.upper()
@@ -105,14 +112,14 @@ def create_jira_vuln(vuln):
     # Minimum fields to post the jira
     json_post = {
         "fields": {
-            "summary": vuln.summary,
+            "summary": html.unescape(vuln.summary),
             "description": {
                 "version": 1,
                 "type": "doc",
                 "content": [
                     {
                         "type": "paragraph",
-                        "content": vuln.description
+                        "content": html_unescape_list_field(vuln.description)
                     }
                 ]
             },
@@ -162,6 +169,23 @@ def create_jira_vuln(vuln):
     return response
 
 #? Helper functions
+def html_unescape_list_field(the_list):
+    unescaped_list = []
+    for text in the_list:
+        field_dict = {}
+        for field in text:
+            # Custom Escape list 
+            for to_escape in TO_ESCAPE_LIST:
+                field_dict[field] = text[field].replace(to_escape['original'], to_escape['replacement'])
+
+            field_dict[field] = html.unescape(field_dict[field])
+
+        unescaped_list.append(field_dict)
+    
+    #debug
+    print(">>>>>>>>>>>>>>>>>>>> unescaped_list:", unescaped_list)
+
+    return unescaped_list
 
 
 #! Testing only
