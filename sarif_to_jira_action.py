@@ -36,17 +36,17 @@ def workflow(sarif_filepath, component, reporter_email):
     # 2. Extract VULN Jira ticket required information
     vuln_list = []
     for run in sarif_data['runs']:
-        driver = run['tool']['driver']
-        for index, rule in enumerate(driver['rules']):
-            summary = rule['id'] + " - " + rule['shortDescription']['text']
+        for result in run['results']:
+            this_rule = get_rule(run, result['ruleId'])
+            summary = this_rule['shortDescription']['text']
             description = get_description_dict_list([
-                rule['fullDescription']['text'], 
-                run['results'][index]['message']['text'],
-                "Affected component: \n" + get_affected_location_lines(run['results'][index]['locations'])
-                ]) # Needs to be in paragraphs
-            source = driver['name']
-            cve_id = rule['id']
-            raw_severity=JIRA_VULN.severity_num_to_qualitative(float(rule['properties']['security-severity']))
+                this_rule['fullDescription']['text'], 
+                result['message']['text'],
+                "Affected component: \n" + get_affected_location_lines(result['locations'])
+                ])
+            source = run['tool']['driver']['name']
+            cve_id = this_rule['id']
+            raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
             reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
 
@@ -100,7 +100,11 @@ def get_affected_location_lines(location_list):
 
     return affected_locations
 
-
+#* Obtain the rule based on ruleId
+def get_rule(run_data, rule_id):
+    for rule in run_data['tool']['driver']['rules']:
+        if rule_id == rule['id']:
+            return rule
 
 #! for testing only
 if __name__ == "__main__":
