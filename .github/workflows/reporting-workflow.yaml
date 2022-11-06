@@ -19,7 +19,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
         with:
-          repository: ${{ github.repository }}
+          repository: breaktoprotect/jira-vuln-mgmt/
           ref: feature/better_summary
 
       - uses: actions/download-artifact@v3
