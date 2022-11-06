@@ -10,6 +10,7 @@ import json
 import os
 import requests
 from requests.auth import HTTPBasicAuth
+import html
 
 import jira_vuln_model as MODEL
 import custom_fields as CUSTOM
@@ -22,6 +23,12 @@ HEADERS = {
     "Accept": "application/json"
 }
 AUTH = HTTPBasicAuth("jeremyspk@gmail.com", os.environ['API_ACCESS_TOKEN'])
+
+#? Symbols escape list
+TO_ESCAPE_LIST = [{
+        'original': 'â€¦',
+        'replacement': '...'
+    }]
 
 def search_project_id(key):
     key = key.upper()
@@ -105,14 +112,14 @@ def create_jira_vuln(vuln):
     # Minimum fields to post the jira
     json_post = {
         "fields": {
-            "summary": vuln.summary,
+            "summary": html.unescape(vuln.summary),
             "description": {
                 "version": 1,
                 "type": "doc",
                 "content": [
                     {
                         "type": "paragraph",
-                        "content": vuln.description
+                        "content": html_unescape_list_field(vuln.description)
                     }
                 ]
             },
@@ -132,10 +139,6 @@ def create_jira_vuln(vuln):
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Raw Severity']] = {
         "value": vuln.raw_severity
     }
-    """ json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Assessed Severity']] = {
-        "value": vuln.assessed_severity
-    } """
-    #json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Status Expiry']] = vuln.status_expiry
 
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Reported Date']] = vuln.reported_date
 
@@ -150,9 +153,6 @@ def create_jira_vuln(vuln):
 
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] = vuln.issue_digest
 
-    #debug
-    print(">>>> json_post:", json_post)
-
     this_headers = {
         "Content-Type":"application/json"
     }
@@ -162,42 +162,22 @@ def create_jira_vuln(vuln):
     return response
 
 #? Helper functions
+def html_unescape_list_field(the_list):
+    unescaped_list = []
+    for text in the_list:
+        field_dict = {}
+        for field in text:
+            # Custom Escape list 
+            for to_escape in TO_ESCAPE_LIST:
+                field_dict[field] = text[field].replace(to_escape['original'], to_escape['replacement'])
 
+            field_dict[field] = html.unescape(field_dict[field])
+
+        unescaped_list.append(field_dict)
+    
+    return unescaped_list
 
 #! Testing only
 if __name__ == "__main__":
-    #Testing import
-    import sys
-
-    #get_all_issues(10001)
-
-    # Get metadata
-    """ metadata_json = get_metadata_create_issue("vuln")
-    for issuetype in metadata_json['projects'][0]['issuetypes']:
-        for key in issuetype['fields'].keys():
-            if issuetype['fields'][key]['required'] == True:
-                print("{KEY:20} - {NAME}".format(KEY=key, NAME=issuetype['fields'][key]['name'])) """
-
-    
-    print("meta_fields_dict:", get_metadata_create_issue("vuln")['projects'][0]["issuetypes"][0]['fields'])
-
-
-    #debug #! ENDS HERE
-    sys.exit(-1)
-
-    # 1. Init 
-    # Obtain project ID by key
-    project_id = search_project_id("VuLN") 
-
-    # Search custom fields
-    print(search_custom_fields())
-
-    # 2. Get interested issues
-    issue_list = get_matching_issues(project_id, "sql") 
-    
-    print(issue_list)
-
-    # 3. Get an issue fields
-    issue_A = get_issue_fields('VULN-1')
-    print(issue_A)
+    pass
 

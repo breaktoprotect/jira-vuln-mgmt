@@ -8,8 +8,6 @@ import argparse
 import json
 import jira_vuln_mgmt as JIRA_VULN
 import datetime
-import html
-
 
 #? Config
 PROJECT_KEY = "vuln"
@@ -36,38 +34,26 @@ def workflow(sarif_filepath, component, reporter_email):
     # 2. Extract VULN Jira ticket required information
     vuln_list = []
     for run in sarif_data['runs']:
-        driver = run['tool']['driver']
-        for index, rule in enumerate(driver['rules']):
-            summary = rule['id'] + " - " + rule['shortDescription']['text']
+        for result in run['results']:
+            this_rule = get_rule(run, result['ruleId'])
+            summary = this_rule['shortDescription']['text']
             description = get_description_dict_list([
-                rule['fullDescription']['text'], 
-                run['results'][index]['message']['text'],
-                "Affected component: \n" + get_affected_location_lines(run['results'][index]['locations'])
-                ]) # Needs to be in paragraphs
-            source = driver['name']
-            cve_id = rule['id']
-            raw_severity=JIRA_VULN.severity_num_to_qualitative(float(rule['properties']['security-severity']))
+                this_rule['fullDescription']['text'], 
+                result['message']['text'],
+                "Affected component: \n" + get_affected_location_lines(result['locations'])
+                ])
+            source = run['tool']['driver']['name']
+            cve_id = this_rule['id']
+            raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
             reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
 
-            vuln = JIRA_VULN.create_vuln(html.unescape(summary), PROJECT_KEY, html.unescape(description), reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
+            # Create a Vuln object and add to the reporting list
+            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)
-
-    """
-    summary="A test summary", 
-    project_key="VULN",  
-    description="test description",
-    reporter="5b2f82cc55b2312db2b866e6",
-    source="SCA",
-    cve_id="CVE-1234-12345678",
-    raw_severity="Medium",
-    reported_date="2022-10-22",
-    component="App A"
-    """
-    
+    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)  
 
 #? Helper functions
 #* Process a list of description paragraphs into a proper Atlassian content list of dict 
@@ -100,7 +86,11 @@ def get_affected_location_lines(location_list):
 
     return affected_locations
 
-
+#* Obtain the rule based on ruleId
+def get_rule(run_data, rule_id):
+    for rule in run_data['tool']['driver']['rules']:
+        if rule_id == rule['id']:
+            return rule
 
 #! for testing only
 if __name__ == "__main__":
