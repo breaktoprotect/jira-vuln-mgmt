@@ -8,6 +8,7 @@ import argparse
 import json
 import jira_vuln_mgmt as JIRA_VULN
 import datetime
+import html
 
 
 #? Config
@@ -37,7 +38,7 @@ def workflow(sarif_filepath, component, reporter_email):
     for run in sarif_data['runs']:
         driver = run['tool']['driver']
         for index, rule in enumerate(driver['rules']):
-            summary = rule['id'] + "_" + rule['name']
+            summary = rule['id'] + " - " + rule['shortDescription']['text']
             description = get_description_dict_list([
                 rule['fullDescription']['text'], 
                 run['results'][index]['message']['text'],
@@ -49,7 +50,7 @@ def workflow(sarif_filepath, component, reporter_email):
             reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
 
-            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
+            vuln = JIRA_VULN.create_vuln(html.unescape(summary), PROJECT_KEY, html.unescape(description), reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
             vuln_list.append(vuln)
 
     # 3. Report vulns
