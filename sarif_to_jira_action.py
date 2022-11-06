@@ -8,8 +8,6 @@ import argparse
 import json
 import jira_vuln_mgmt as JIRA_VULN
 import datetime
-import html
-
 
 #? Config
 PROJECT_KEY = "vuln"
@@ -50,24 +48,12 @@ def workflow(sarif_filepath, component, reporter_email):
             reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
 
-            vuln = JIRA_VULN.create_vuln(html.unescape(summary), PROJECT_KEY, html.unescape(description), reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
+            # Create a Vuln object and add to the reporting list
+            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)
-
-    """
-    summary="A test summary", 
-    project_key="VULN",  
-    description="test description",
-    reporter="5b2f82cc55b2312db2b866e6",
-    source="SCA",
-    cve_id="CVE-1234-12345678",
-    raw_severity="Medium",
-    reported_date="2022-10-22",
-    component="App A"
-    """
-    
+    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)  
 
 #? Helper functions
 #* Process a list of description paragraphs into a proper Atlassian content list of dict 
