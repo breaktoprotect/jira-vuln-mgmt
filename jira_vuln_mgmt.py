@@ -87,8 +87,6 @@ def is_duplicate_finding(vuln):
         else:
             return False
         
-
-
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
 #  This is to avoid hardcoding specific field keys (e.g. hardcoding customfield_10011 for 'Reported Date' field)
@@ -105,22 +103,21 @@ def init_all_fields_id(PROJECT_KEY):
     # 2. Populate field 'source' options id
     #populate_source_options_id(meta_fields_dict)
 
+#* Find the key for each of the corresponding field's name
 def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CUSTOM_FIELDS_TO_ID): # pass by reference
-    # Find the key for each of the corresponding field's name
-    map_id_to_fields(meta_fields_dict, custom_fields_id_dict)
-
-
-def map_id_to_fields(meta_fields_dict, fields_to_populate_id):
-    for field in fields_to_populate_id:
+    for field in custom_fields_id_dict:
         for meta_field in meta_fields_dict:
             if meta_fields_dict[meta_field]['name'] == field:
-                fields_to_populate_id[field] = meta_fields_dict[meta_field]['key']
+                custom_fields_id_dict[field] = meta_fields_dict[meta_field]['key']
+    return
 
+#* Obtain reporter's account ID based on email address
 def get_reporter_account_id(email_address):
     json_data = JIRA_CLIENT.search_users_by_email(email_address)
 
     return json_data[0]['accountId']
 
+#* Translate the qualitative rating based on the CVSS quantitative figure between 0 to 10
 def severity_num_to_qualitative(num_rating):
     case = lambda x: num_rating < x
     if case(4):
