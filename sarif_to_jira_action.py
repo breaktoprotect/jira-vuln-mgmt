@@ -26,7 +26,7 @@ def main():
     workflow(args.sarif_filepath, args.affected_component, args.jira_reporter_email)
 
 #* The Workflow
-def workflow(sarif_filepath, component, reporter_email):
+def workflow(sarif_filepath, affected_component, reporter_email):
     # 1. Retrieve and store Sarif file contents to dict format
     with open(sarif_filepath, 'r') as json_file:
         sarif_data = json.load(json_file)
@@ -40,16 +40,17 @@ def workflow(sarif_filepath, component, reporter_email):
             description = get_description_dict_list([
                 this_rule['fullDescription']['text'], 
                 result['message']['text'],
-                "Affected component: \n" + get_affected_location_lines(result['locations'])
+                "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
                 ])
-            source = run['tool']['driver']['name']
+            finding_source = run['tool']['driver']['name']
             cve_id = this_rule['id']
             raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
-            reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
-            issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, component)
+            first_reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+            last_reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+            issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
             # Create a Vuln object and add to the reporting list
-            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest)
+            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
             vuln_list.append(vuln)
 
     # 3. Report vulns

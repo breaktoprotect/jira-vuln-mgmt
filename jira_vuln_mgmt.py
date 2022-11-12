@@ -48,7 +48,7 @@ def report_vuln(vuln):
 
 #* Create a vuln instance
 #   reported_date: YYYY-MM-DD
-def create_vuln(summary, project_key, description, reporter_email, source, cve_id, raw_severity, reported_date, component, issue_digest):
+def create_vuln(summary, project_key, description, reporter_email, source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest):
     project_id = JIRA_CLIENT.search_project_id(project_key)
     reporter_id = get_reporter_account_id(reporter_email)
 
@@ -57,11 +57,12 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
             project_id=project_id,  
             description=description,
             reporter_id=reporter_id,
-            source=source,
+            finding_source=source,
             cve_id=cve_id,
             raw_severity=raw_severity,
-            reported_date=reported_date,
-            component=component,
+            first_reported_date=first_reported_date,
+            last_reported_date=last_reported_date,
+            affected_component=affected_component,
             issue_digest=issue_digest
     )
     return vuln
@@ -72,7 +73,7 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
 #  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
 #TODO currently it is 1 new issue per request to verify existence of existing finding - is there a better way?
 def is_duplicate_finding(vuln):
-    this_issue_digest = calc_issue_digest(vuln.summary, vuln.description, vuln.cve_id, vuln.component)
+    this_issue_digest = calc_issue_digest(vuln.summary, vuln.description, vuln.cve_id, vuln.affected_component)
 
     response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}"'.format(DIGEST=this_issue_digest))
 
@@ -100,7 +101,7 @@ def init_all_fields_id(PROJECT_KEY):
     # 1. Populate fields key 
     populate_custom_fields_key(meta_fields_dict)
 
-    # 2. Populate field 'source' options id
+    # 2. Populate field 'Finding Source' options id
     #populate_source_options_id(meta_fields_dict)
 
 #* Find the key for each of the corresponding field's name
@@ -130,9 +131,9 @@ def severity_num_to_qualitative(num_rating):
         return "Critical"
 
 #* Calculate a message digest for issue
-def calc_issue_digest(summary, description, cve_id, component):
+def calc_issue_digest(summary, description, cve_id, affected_component):
     hash = hashlib.sha256()
-    overall_str = (summary + str(description) + cve_id + component).encode('utf-8')
+    overall_str = (summary + str(description) + cve_id + affected_component).encode('utf-8')
     hash.update(overall_str)
     
     return hash.hexdigest()
@@ -149,14 +150,7 @@ def calc_issue_digest(summary, description, cve_id, component):
         for option in meta_fields_dict[Source_key]['allowedValues']:
             if key == option['value']:
                 field_source_options_id[key] = option['id']
-
-def populate_raw_sev_options_id(meta_fields_dict, field_sev_options_id=CUSTOM.FIELD_RAW_SEVERITY_OPTIONS_ID):
-    pass
-
-def populate_components_options_id():
-    #todo
-    pass """
-
+"""
 #! Testing only
 if __name__ == "__main__":
     init_all_fields_id("VULN")
@@ -172,7 +166,7 @@ if __name__ == "__main__":
 
     # Test
     project_id = JIRA_CLIENT.search_project_id("vuln")
-    vuln = JIRA_MODEL.Vuln(project_id='10001', summary='DS002_Misconfiguration', description=[{'type': 'text', 'text': 'Running containers with &#39;root&#39; user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a &#39;USER&#39; statement to the Dockerfile.'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Artifact: Dockerfile\nType: dockerfile\nVulnerability DS002\nSeverity: HIGH\nMessage: Specify at least 1 USER command in Dockerfile with non-root user as argument\nLink: [DS002](https://avd.aquasec.com/misconfig/ds002)'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Affected component: \nDockerfile (from Line: 1 to 1)\n'}], reporter_id='5b2f82cc55b2312db2b866e6', source='Trivy', cve_id='DS002', raw_severity='High', reported_date='2022-11-03', component='App A', issue_digest="cd4047db6316da4f66dcbaa5f546796bcdf9bf063b41f45c174a3047d8df003d")
+    vuln = JIRA_MODEL.Vuln(project_id='10001', summary='DS002_Misconfiguration', description=[{'type': 'text', 'text': 'Running containers with &#39;root&#39; user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a &#39;USER&#39; statement to the Dockerfile.'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Artifact: Dockerfile\nType: dockerfile\nVulnerability DS002\nSeverity: HIGH\nMessage: Specify at least 1 USER command in Dockerfile with non-root user as argument\nLink: [DS002](https://avd.aquasec.com/misconfig/ds002)'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Affected component: \nDockerfile (from Line: 1 to 1)\n'}], reporter_id='5b2f82cc55b2312db2b866e6', finding_source='Trivy', cve_id='DS002', raw_severity='High', first_reported_date='2022-11-03', affected_component='App A', issue_digest="cd4047db6316da4f66dcbaa5f546796bcdf9bf063b41f45c174a3047d8df003d")
 
     print("is_duplicate_finding():", is_duplicate_finding(vuln))
     

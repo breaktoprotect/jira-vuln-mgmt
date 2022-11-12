@@ -140,14 +140,15 @@ def create_jira_vuln(vuln):
         "value": vuln.raw_severity
     }
 
-    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Reported Date']] = vuln.reported_date
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['First Reported Date']] = vuln.first_reported_date
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Last Reported Date']] = vuln.last_reported_date
 
-    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Source']] = {
-        "value": vuln.source
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Finding Source']] = {
+        "value": vuln.finding_source
     }
-    json_post["fields"]["components"] = [
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Affected Component']] = [
         {
-            "name": vuln.component
+            "name": vuln.affected_component
         }
     ]
 
