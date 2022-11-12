@@ -5,7 +5,7 @@ Description:
 - Logic for implementing vulnerability ticket creation via Jira
 """
 import jira_client as JIRA_CLIENT
-import custom_fields as CUSTOM
+import custom_params as CUSTOM
 import jira_vuln_model as JIRA_MODEL
 import hashlib
 
@@ -14,8 +14,6 @@ import hashlib
 def report_vuln_list(vuln_list, project_key):
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
-    """ project_id = JIRA_CLIENT.search_project_id(project_key)
-    all_list_of_issues = get_matching_issues(project_id, "")  """#! Empty string means get all issues? Check again
 
     # 2. Duplicate check - ignore vulns that are already reported
     no_duplicate_vuln_list = []
@@ -25,14 +23,9 @@ def report_vuln_list(vuln_list, project_key):
 
     # 3. Close vulns that are no longer found
     fixed_issue_id_list = get_fixed_issue_id_list(vuln_list)
-
-    for fixed_issue_id in fixed_issue_id_list:
-        auto_close_issue(fixed_issue_id)
+    auto_close_issue_list(fixed_issue_id_list)
 
     # 4. Report each vuln on the list
-    #debug
-    print("vuln to report:", no_duplicate_vuln_list)
-
     for vuln in no_duplicate_vuln_list:
         report_vuln(vuln)
 
@@ -111,11 +104,13 @@ def get_fixed_issue_id_list(this_vuln_list):
     return fixed_vuln_id_list
 
 #* Auto Close An Issue
-def auto_close_issue(issue_id):
-    transition_id = JIRA_CLIENT.get_transition_id(issue_id, "Auto Closed")
-    is_successful = JIRA_CLIENT.set_status(issue_id, transition_id)
+def auto_close_issue_list(issue_id_list):
+    transition_id = JIRA_CLIENT.get_transition_id(issue_id_list[0], "Auto Closed")
 
-    return is_successful
+    for issue_id in issue_id_list:
+        JIRA_CLIENT.set_status(issue_id, transition_id)
+
+    return
         
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
@@ -129,6 +124,8 @@ def init_all_fields_id(PROJECT_KEY):
 
     # 1. Populate fields key 
     populate_custom_fields_key(meta_fields_dict)
+
+    # 2. 
 
     # 2. Populate field 'Finding Source' options id
     #populate_source_options_id(meta_fields_dict)

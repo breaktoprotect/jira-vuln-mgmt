@@ -13,15 +13,6 @@ CUSTOM_FIELDS_TO_ID = {
     "Affected Component": None
 }
 
-FIELD_SOURCE_OPTIONS_ID = {
-    "SAST": None,
-    "DAST": None,
-    "SCA": None,
-    "Secret Detection": None,
-    "Trivy": None
-    # There are alot more - to be added later~
-}
-
 FIELD_RAW_SEVERITY_OPTIONS_ID = {
     "Critical": None,
     "High": None,
@@ -37,3 +28,6 @@ FIELD_RAW_SEVERITY_OPTIONS_ID = {
     "Low": None,
     "None (Informational)": None
 }
+
+#* Transition ID
+TRANSITION_ID = None
