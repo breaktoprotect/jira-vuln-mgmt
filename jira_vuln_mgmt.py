@@ -23,7 +23,8 @@ def report_vuln_list(vuln_list, project_key):
 
     # 3. Close vulns that are no longer found
     fixed_issue_id_list = get_fixed_issue_id_list(vuln_list)
-    auto_close_issue_list(fixed_issue_id_list)
+    if len(fixed_issue_id_list) > 0:
+        auto_close_issue_list(fixed_issue_id_list)
 
     # 4. Report each vuln on the list
     for vuln in no_duplicate_vuln_list:
@@ -67,11 +68,12 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
 
 #* Duplication check
 #  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
+#  Enhanced criteria: Ignores 'Auto Closed' or 'Closed' - not considered as duplicate and a new issue will be created.
 #TODO currently it is 1 new issue per request to verify existence of existing finding - is there a better way?
 def is_duplicate_finding(vuln):
     this_issue_digest = calc_issue_digest(vuln.summary, vuln.description, vuln.cve_id, vuln.affected_component)
 
-    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}"'.format(DIGEST=this_issue_digest))
+    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status != "Auto Closed" AND status != "Closed"'.format(DIGEST=this_issue_digest))
 
     #debug
     print(response.json())
