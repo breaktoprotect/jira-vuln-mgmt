@@ -139,18 +139,10 @@ def create_jira_vuln(vuln):
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Raw Severity']] = {
         "value": vuln.raw_severity
     }
-
-    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Reported Date']] = vuln.reported_date
-
-    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Source']] = {
-        "value": vuln.source
-    }
-    json_post["fields"]["components"] = [
-        {
-            "name": vuln.component
-        }
-    ]
-
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['First Reported Date']] = vuln.first_reported_date
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Last Reported Date']] = vuln.last_reported_date
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Finding Source']] = vuln.finding_source
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Affected Component']] = vuln.affected_component
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] = vuln.issue_digest
 
     this_headers = {
@@ -179,5 +171,5 @@ def html_unescape_list_field(the_list):
 
 #! Testing only
 if __name__ == "__main__":
-    pass
+    print(get_metadata_create_issue("VULN"))
 

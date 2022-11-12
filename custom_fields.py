@@ -2,17 +2,15 @@
 #* Custom fields
 # To be retrieved dynamically from Jira Software (Cloud)
 CUSTOM_FIELDS_TO_ID = {
-    "Reported Date": None,
+    "First Reported Date": None,
+    "Last Reported Date": None,
     "Raw Severity": None,
     "Assessed Severity": None,
     "CVE ID": None,
-    "Source": None,
+    "Finding Source": None,
     "Status Expiry": None,
-    "Issue Digest": None
-}
-
-STANDARD_FIELDS = {
-    "Components": None
+    "Issue Digest": None,
+    "Affected Component": None
 }
 
 FIELD_SOURCE_OPTIONS_ID = {
