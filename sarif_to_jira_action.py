@@ -45,8 +45,8 @@ def workflow(sarif_filepath, affected_component, reporter_email):
             finding_source = run['tool']['driver']['name']
             cve_id = this_rule['id']
             raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
-            first_reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
-            last_reported_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+            first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
+            last_reported_date = JIRA_VULN.get_current_date()
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
             # Create a Vuln object and add to the reporting list

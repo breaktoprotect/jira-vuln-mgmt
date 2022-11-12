@@ -208,6 +208,18 @@ def set_status(issue_id, transition_id):
     else:
         return False
 
+#* Update a custom field value of an issue
+def update_issue_custom_field(issue_id, name_of_custom_field, value_of_custom_field):
+    json_data = {
+        "fields": {
+            CUSTOM.CUSTOM_FIELDS_TO_ID[name_of_custom_field]: value_of_custom_field
+        }
+    }
+    response = requests.put(API_HOSTNAME + API_ISSUE + issue_id + "/", json=json_data, headers=HEADERS,auth=AUTH)
+
+    #debug
+    print(response.text, response.status_code)
+
 #? ######################## Helper functions ########################
 #? Iteratively escape fields in a list
 def html_unescape_list_field(the_list):
@@ -251,7 +263,7 @@ if __name__ == "__main__":
     pass
 
     # Test Get Transitions
-    issue_id = "10203"
+    """ issue_id = "10203"
     transition_id = get_transition_id(issue_id, "Auto Closed")
-    print(transition_id)
+    print(transition_id) """
     #set_status(issue_id, transition_id)

@@ -8,6 +8,8 @@ import jira_client as JIRA_CLIENT
 import custom_params as CUSTOM
 import jira_vuln_model as JIRA_MODEL
 import hashlib
+import datetime
+import pytz
 
 #* ***** Core Features *****
 #* Report multiple vuln issues using a list of vuln objects on Jira
@@ -15,11 +17,17 @@ def report_vuln_list(vuln_list, project_key):
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
 
-    # 2. Duplicate check - ignore vulns that are already reported
+    # 2. Duplicate check - ignore vulns that are already reported; update duplicates' 'Last Reported Date'
     no_duplicate_vuln_list = []
+    duplicate_issue_id_list = []
     for vuln in vuln_list:
-        if not is_duplicate_finding(vuln):
+        value = is_duplicate_finding(vuln)
+        if not value:
             no_duplicate_vuln_list.append(vuln)
+        else:
+            duplicate_issue_id_list.append(value)
+
+    update_last_reported_issue_id_list(duplicate_issue_id_list)
 
     # 3. Close vulns that are no longer found
     fixed_issue_id_list = get_fixed_issue_id_list(vuln_list)
@@ -75,16 +83,19 @@ def is_duplicate_finding(vuln):
 
     response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status != "Auto Closed" AND status != "Closed"'.format(DIGEST=this_issue_digest))
 
-    #debug
-    print(response.json())
-    print(response.status_code)
-
     # Check if issue existed
     if 'issues' in response.json().keys():
         if len(response.json()['issues']) > 0:
-            return True
+            return response.json()['issues'][0]['id']
         else:
             return False
+
+#* Update the list of vuln's 'Last Reported Date' field with current time
+def update_last_reported_issue_id_list(issue_id_list):
+    for issue_id in issue_id_list:
+        JIRA_CLIENT.update_issue_custom_field(issue_id, "Last Reported Date", get_current_date())
+
+    return
 
 #* Get findings that are no longer reported this time - delta between current scan and existing Jira issues
 #  Criteria: If issue no longer exist in current scans given that it belongs to the same affected component and it's by the same tool-type (e.g. Trivy-SCA) , it should be closed
@@ -115,7 +126,7 @@ def auto_close_issue_list(issue_id_list):
     return
         
 #? ***** Helper functions *****
-#* Prepare any required information such as field keys, options for each fields, etc. 
+#? Prepare any required information such as field keys, options for each fields, etc. 
 #  This is to avoid hardcoding specific field keys (e.g. hardcoding customfield_10011 for 'Reported Date' field)
 def init_all_fields_id(PROJECT_KEY):
     # Get the dict of metadata fields
@@ -124,15 +135,10 @@ def init_all_fields_id(PROJECT_KEY):
     for issuetype in metadata_dict['projects'][0]['issuetypes']:
         meta_fields_dict = issuetype['fields']
 
-    # 1. Populate fields key 
+    # Populate fields key 
     populate_custom_fields_key(meta_fields_dict)
 
-    # 2. 
-
-    # 2. Populate field 'Finding Source' options id
-    #populate_source_options_id(meta_fields_dict)
-
-#* Find the key for each of the corresponding field's name
+#? Find the key for each of the corresponding field's name
 def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CUSTOM_FIELDS_TO_ID): # pass by reference
     for field in custom_fields_id_dict:
         for meta_field in meta_fields_dict:
@@ -140,13 +146,13 @@ def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CU
                 custom_fields_id_dict[field] = meta_fields_dict[meta_field]['key']
     return
 
-#* Obtain reporter's account ID based on email address
+#? Obtain reporter's account ID based on email address
 def get_reporter_account_id(email_address):
     json_data = JIRA_CLIENT.search_users_by_email(email_address)
 
     return json_data[0]['accountId']
 
-#* Translate the qualitative rating based on the CVSS quantitative figure between 0 to 10
+#? Translate the qualitative rating based on the CVSS quantitative figure between 0 to 10
 def severity_num_to_qualitative(num_rating):
     case = lambda x: num_rating < x
     if case(4):
@@ -158,7 +164,7 @@ def severity_num_to_qualitative(num_rating):
     else:
         return "Critical"
 
-#* Calculate a message digest for issue
+#? Calculate a message digest for issue
 def calc_issue_digest(summary, description, cve_id, affected_component):
     hash = hashlib.sha256()
     overall_str = (summary + str(description) + cve_id + affected_component).encode('utf-8')
@@ -166,13 +172,20 @@ def calc_issue_digest(summary, description, cve_id, affected_component):
     
     return hash.hexdigest()
 
-#* Retrieve list of a specified field (e.g. Issue Digest)
+#? Retrieve list of a specified field (e.g. Issue Digest)
 def get_list_of_field(vuln_list, field_name):
     field_list = []
     for vuln in vuln_list:
         field_list.append(vuln[field_name])
 
     return field_list
+
+#? Generate a date string e.g. 2012-12-30 of GTM now.
+def get_current_date(country="Asia/Singapore"):
+    timezone = pytz.timezone(country)
+    current_date = datetime.datetime.now(timezone).strftime('%Y-%m-%d')
+
+    return current_date
 
 # Potentially usable code in future
 """ def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
@@ -191,7 +204,6 @@ def get_list_of_field(vuln_list, field_name):
 if __name__ == "__main__":
     init_all_fields_id("VULN")
     print(CUSTOM.CUSTOM_FIELDS_TO_ID)
-    print(CUSTOM.FIELD_SOURCE_OPTIONS_ID)
 
     # Get all issues
     """ 
@@ -208,10 +220,11 @@ if __name__ == "__main__":
     
 
     # Test get_all_jira_issues(project_key)
-    import json
+    """ import json
     jql = 'project = "{PROJECT_KEY}" AND "Affected Component[Short text]" ~ "breaktoprotect/test-pipeline-alpha@main" ORDER BY created DESC'.format(PROJECT_KEY="vuln")
     all_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
-    """ with open("jql_all_results.json", "w") as f:
-        f.writelines(json.dumps(response_json, indent=4)) """
     print(all_issues_list)
-    print("length of all_issues_list:", len(all_issues_list))
+    print("length of all_issues_list:", len(all_issues_list)) """
+
+    issue_id = "10201"
+    JIRA_CLIENT.update_issue_custom_field(issue_id, "Last Reported Date", datetime.datetime.utcnow().strftime('%Y-%m-%d'))
