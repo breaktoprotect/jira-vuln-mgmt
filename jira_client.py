@@ -146,11 +146,9 @@ def create_jira_vuln(vuln):
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Finding Source']] = {
         "value": vuln.finding_source
     }
-    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Affected Component']] = [
-        {
-            "name": vuln.affected_component
-        }
-    ]
+    json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Affected Component']] = {
+            "value": vuln.affected_component
+    }
 
     json_post["fields"][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] = vuln.issue_digest
 
