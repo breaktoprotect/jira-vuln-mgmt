@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 import html
 
 import jira_vuln_model as MODEL
-import custom_fields as CUSTOM
+import custom_params as CUSTOM
 
 from api_v3_endpoints import *
 
@@ -159,6 +159,9 @@ def create_jira_vuln(vuln):
 def get_transition_id(issue_id, name_of_transition):
     response = requests.get(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", headers=HEADERS,auth=AUTH)
 
+    #debug
+    print(response.text)
+
     for transition in response.json()['transitions']:
         if name_of_transition == transition['name']:
             return transition['id']
@@ -250,5 +253,5 @@ if __name__ == "__main__":
     # Test Get Transitions
     issue_id = "10203"
     transition_id = get_transition_id(issue_id, "Auto Closed")
-
-    set_status(issue_id, transition_id)
+    print(transition_id)
+    #set_status(issue_id, transition_id)
