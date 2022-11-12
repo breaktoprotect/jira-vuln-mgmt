@@ -81,7 +81,7 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
 def is_duplicate_finding(vuln):
     this_issue_digest = calc_issue_digest(vuln.summary, vuln.description, vuln.cve_id, vuln.affected_component)
 
-    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status != "Auto Closed" AND status != "Closed"'.format(DIGEST=this_issue_digest))
+    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status NOT IN ("Auto Closed", "Closed")'.format(DIGEST=this_issue_digest))
 
     # Check if issue existed
     if 'issues' in response.json().keys():
@@ -103,7 +103,7 @@ def get_fixed_issue_id_list(this_vuln_list):
     # Obtain all existing
     affected_component = this_vuln_list[0].affected_component # Assuming all vuln in the list comes from same component
     finding_source = this_vuln_list[0].finding_source
-    jql = 'project = "vuln" AND "Affected Component[Short text]" ~ "{AFFECTED_COMPONENT}" AND "Finding Source[Short text]" ~ "{FINDING_SOURCE}" ORDER BY created DESC'.format(AFFECTED_COMPONENT=affected_component, FINDING_SOURCE=finding_source)
+    jql = 'project = "vuln" AND "Affected Component[Short text]" ~ "{AFFECTED_COMPONENT}" AND "Finding Source[Short text]" ~ "{FINDING_SOURCE}" AND status NOT IN ("Auto Closed", "Closed") ORDER BY created DESC'.format(AFFECTED_COMPONENT=affected_component, FINDING_SOURCE=finding_source)
     jira_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
 
     # Compare the current-to-be-reported list vs. existing-on-jira list
