@@ -24,6 +24,10 @@ def report_vuln_list(vuln_list, project_key):
             no_duplicate_vuln_list.append(vuln)
 
     # 3. Close vulns that are no longer found
+    fixed_issue_id_list = get_fixed_issue_id_list(vuln_list)
+
+    for fixed_issue_id in fixed_issue_id_list:
+        auto_close_issue(fixed_issue_id)
 
     # 4. Report each vuln on the list
     #debug
@@ -31,7 +35,6 @@ def report_vuln_list(vuln_list, project_key):
 
     for vuln in no_duplicate_vuln_list:
         report_vuln(vuln)
-
 
 #* Report a single vuln issue on Jira
 def report_vuln(vuln):
@@ -87,6 +90,32 @@ def is_duplicate_finding(vuln):
             return True
         else:
             return False
+
+#* Get findings that are no longer reported this time - delta between current scan and existing Jira issues
+#  Criteria: If issue no longer exist in current scans given that it belongs to the same affected component and it's by the same tool-type (e.g. Trivy-SCA) , it should be closed
+def get_fixed_issue_id_list(this_vuln_list):
+    # Obtain all existing
+    affected_component = this_vuln_list[0].affected_component # Assuming all vuln in the list comes from same component
+    finding_source = this_vuln_list[0].finding_source
+    jql = 'project = "vuln" AND "Affected Component[Short text]" ~ "{AFFECTED_COMPONENT}" AND "Finding Source[Short text]" ~ "{FINDING_SOURCE}" ORDER BY created DESC'.format(AFFECTED_COMPONENT=affected_component, FINDING_SOURCE=finding_source)
+    jira_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
+
+    # Compare the current-to-be-reported list vs. existing-on-jira list
+    fixed_vuln_id_list = [] # Keep a record 'Issue Digest' of fixed issues
+
+    this_vuln_issue_digest_list = get_list_of_field(this_vuln_list, "issue_digest")
+    for issue in jira_issues_list:
+        if issue['fields'][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] not in this_vuln_issue_digest_list:
+            fixed_vuln_id_list.append(issue['id'])
+
+    return fixed_vuln_id_list
+
+#* Auto Close An Issue
+def auto_close_issue(issue_id):
+    transition_id = JIRA_CLIENT.get_transition_id(issue_id, "Auto Closed")
+    is_successful = JIRA_CLIENT.set_status(issue_id, transition_id)
+
+    return is_successful
         
 #? ***** Helper functions *****
 #* Prepare any required information such as field keys, options for each fields, etc. 
@@ -138,6 +167,14 @@ def calc_issue_digest(summary, description, cve_id, affected_component):
     
     return hash.hexdigest()
 
+#* Retrieve list of a specified field (e.g. Issue Digest)
+def get_list_of_field(vuln_list, field_name):
+    field_list = []
+    for vuln in vuln_list:
+        field_list.append(vuln[field_name])
+
+    return field_list
+
 # Potentially usable code in future
 """ def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
     # Get 'Source' field's key (customfield_...)
@@ -170,3 +207,12 @@ if __name__ == "__main__":
 
     print("is_duplicate_finding():", is_duplicate_finding(vuln)) """
     
+
+    # Test get_all_jira_issues(project_key)
+    import json
+    jql = 'project = "{PROJECT_KEY}" AND "Affected Component[Short text]" ~ "breaktoprotect/test-pipeline-alpha@main" ORDER BY created DESC'.format(PROJECT_KEY="vuln")
+    all_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
+    """ with open("jql_all_results.json", "w") as f:
+        f.writelines(json.dumps(response_json, indent=4)) """
+    print(all_issues_list)
+    print("length of all_issues_list:", len(all_issues_list))
