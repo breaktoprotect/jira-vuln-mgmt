@@ -76,10 +76,12 @@ def get_matching_issues(project_id, query):
 
     return matched_issue_key_list
 
-def jql_search_issues(jql):
+def jql_search_issues(jql, field_list=["*all"], start_at = 0, max_results = 100, ):
     params = {
         "jql": jql,
-        "maxResults": 999999
+        "maxResults": max_results,
+        "fields": field_list,
+        "startAt": start_at
     }
     response = requests.post(API_HOSTNAME + API_JQL_SEARCH_ISSUES, json=params, headers=HEADERS, auth=AUTH)
 
@@ -103,7 +105,7 @@ def get_issue_fields(issue_key):
         "fields":"*navigable"
     }
 
-    response = requests.get(API_HOSTNAME + API_ISSUES + issue_key, params=params, headers=HEADERS,auth=AUTH)
+    response = requests.get(API_HOSTNAME + API_ISSUE + issue_key, params=params, headers=HEADERS,auth=AUTH)
 
     return response.json()
 
@@ -149,11 +151,62 @@ def create_jira_vuln(vuln):
         "Content-Type":"application/json"
     }
 
-    response = requests.post(API_HOSTNAME + API_ISSUES, json=json_post, headers=this_headers,auth=AUTH)
+    response = requests.post(API_HOSTNAME + API_ISSUE, json=json_post, headers=this_headers,auth=AUTH)
 
     return response
 
-#? Helper functions
+#* Get Workflow Transition ID for a specific transition
+def get_transition_id(issue_id, name_of_transition):
+    response = requests.get(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", headers=HEADERS,auth=AUTH)
+
+    for transition in response.json()['transitions']:
+        if name_of_transition == transition['name']:
+            return transition['id']
+
+    return -1
+
+#* Perform Workflow Transition to change status via Transition ID (e.g. Auto Closed)
+def set_status(issue_id, transition_id):
+    json_post = {
+        "transition": {
+            "id": transition_id
+        },
+        "update": {
+            "comment": [
+                {
+                    "add": {
+                        "body": {
+                            "type": "doc",
+                            "version": 1,
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [
+                                        {
+                                            "text": "Issue is no longer present and has been automatically closed.",
+                                            "type": "text"
+                                        }
+                                    ]
+                                }
+
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+
+    }
+
+    response = requests.post(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", json=json_post, headers=HEADERS,auth=AUTH)
+
+    if response.status_code < 300:
+        return True
+    else:
+        return False
+
+#? ######################## Helper functions ########################
+#? Iteratively escape fields in a list
 def html_unescape_list_field(the_list):
     unescaped_list = []
     for text in the_list:
@@ -169,7 +222,33 @@ def html_unescape_list_field(the_list):
     
     return unescaped_list
 
+#? Retrieve all Jira issues using pagination technique (due to max 100 (cloud) or 1000 (on-prem) results limit)
+def jql_get_all_jira_issues(jql, field_list=["*all"]):
+    # Config
+    page_size = 5 # Jira cloud max is 100, 50 is default
+
+    # Get total number of issues
+    response = jql_search_issues(jql, field_list=field_list, start_at=0, max_results=page_size)
+    total_num_issues = response.json()['total']
+
+    # Iteratively get all issues
+    all_issues_list = []
+    current_index = 0
+
+    while(current_index < total_num_issues):
+        response = jql_search_issues(jql, field_list=field_list, start_at=current_index, max_results=page_size)
+        all_issues_list.extend(response.json()['issues'])
+        current_index += page_size
+
+    return all_issues_list
+
+
 #! Testing only
 if __name__ == "__main__":
-    print(get_metadata_create_issue("VULN"))
+    pass
 
+    # Test Get Transitions
+    issue_id = "10203"
+    transition_id = get_transition_id(issue_id, "Auto Closed")
+
+    set_status(issue_id, transition_id)

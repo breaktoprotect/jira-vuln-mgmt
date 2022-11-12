@@ -24,5 +24,7 @@ class Vuln(object):
     affected_component: str
     issue_digest: str # SHA-256
 
-
+    # Make this dataclass scriptable
+    def __getitem__(self, item):
+        return getattr(self, item)
     
