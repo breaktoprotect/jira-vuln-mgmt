@@ -61,7 +61,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)  
+    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY, affected_component, finding_source)  
 
 
 #? Helper functions
