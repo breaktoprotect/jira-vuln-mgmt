@@ -11,6 +11,7 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth
 import html
+import sys
 
 import jira_vuln_model as MODEL
 import custom_params as CUSTOM
@@ -252,19 +253,24 @@ def jql_get_all_jira_issues(jql, field_list=["*all"]):
     page_size = 5 # Jira cloud max is 100, 50 is default
 
     # Get total number of issues
-    response = jql_search_issues(jql, field_list=field_list, start_at=0, max_results=page_size)
-    total_num_issues = response.json()['total']
+    try:
+        response = jql_search_issues(jql, field_list=field_list, start_at=0, max_results=page_size)
+        total_num_issues = response.json()['total']
 
-    # Iteratively get all issues
-    all_issues_list = []
-    current_index = 0
+        # Iteratively get all issues
+        all_issues_list = []
+        current_index = 0
 
-    while(current_index < total_num_issues):
-        response = jql_search_issues(jql, field_list=field_list, start_at=current_index, max_results=page_size)
-        all_issues_list.extend(response.json()['issues'])
-        current_index += page_size
+        while(current_index < total_num_issues):
+            response = jql_search_issues(jql, field_list=field_list, start_at=current_index, max_results=page_size)
+            all_issues_list.extend(response.json()['issues'])
+            current_index += page_size
 
-    return all_issues_list
+        return all_issues_list
+    except:
+        e = sys.exc_info()[0]
+        print("[!] Fatal exception in jql_get_all_jira_issues(jql, field_list).Response status code:", response.status_code)
+        print("    Response:", response.text)
 
 
 #! Testing only
