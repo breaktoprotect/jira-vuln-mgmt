@@ -271,6 +271,7 @@ def jql_get_all_jira_issues(jql, field_list=["*all"]):
         e = sys.exc_info()[0]
         print("[!] Fatal exception in jql_get_all_jira_issues(jql, field_list).Response status code:", response.status_code)
         print("    Response:", response.text)
+        return
 
 
 #! Testing only
