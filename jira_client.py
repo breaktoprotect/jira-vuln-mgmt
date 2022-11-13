@@ -53,7 +53,7 @@ def search_users_by_email(query):
     if not isinstance(response.json(), list) or len(response.json()) < 1:
         print("[!] Fatal error. The 'response.json()' is not a list and needs to be. Dumping 'response.json()':", response.json())
         print("    Dumping params --> query:", query)
-        print("    Dumping request --> request:", response.request)
+        print("    Dumping request --> url:", response.request.url, "headers:", response.request.headers, "body:", response.request.body)
         sys.exit(-1)
 
     return response.json() 
