@@ -49,6 +49,13 @@ def search_project_id(key):
 def search_users_by_email(query):
     response = requests.get(API_HOSTNAME + API_SEARCH_USERS + "?query=" + query, headers=HEADERS, auth=AUTH)
 
+    # Verify to ensure the data is a list and at least 1 in length
+    if not isinstance(response.json(), list) or len(response.json()) < 1:
+        print("[!] Fatal error. The 'response.json()' is not a list and needs to be. Dumping 'response.json()':", response.json())
+        print("    Dumping params --> query:", query)
+        print("    Dumping request --> request:", response.request)
+        sys.exit(-1)
+
     return response.json() 
 
 def search_custom_fields():
