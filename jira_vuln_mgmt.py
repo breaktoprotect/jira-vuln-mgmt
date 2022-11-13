@@ -187,6 +187,19 @@ def get_current_date(country="Asia/Singapore"):
 
     return current_date
 
+#? Check if string is in camelCase format
+def is_camel_case(text):
+    # Alphanumeric check
+    if not text.isalnum():
+        return False
+    
+    # Ensure it contains at least an upper and lower case
+    if text == text.lower() or text == text.upper():
+        return False
+
+    return True
+    
+
 # Potentially usable code in future
 """ def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
     # Get 'Source' field's key (customfield_...)
