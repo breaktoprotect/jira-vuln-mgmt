@@ -36,10 +36,9 @@ jobs:
         run: | 
           python3 -m pip install --user pipenv 
           pipenv sync
-          pipenv shell
 
       - name: Python script to report findings from trivy-results.sarif
-        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r jeremyspk@gmail.com
+        run: pipenv shell python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r jeremyspk@gmail.com
         env:
           API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}
           API_HOSTNAME: ${{ secrets.env-api-host }}
