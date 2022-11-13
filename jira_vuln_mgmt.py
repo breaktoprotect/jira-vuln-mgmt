@@ -150,6 +150,9 @@ def init_all_fields_id(PROJECT_KEY):
     # Populate fields key 
     populate_custom_fields_key(meta_fields_dict)
 
+    # Populate issuetype id
+    populate_issuetype_id(PROJECT_KEY)
+
 #? Find the key for each of the corresponding field's name
 def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CUSTOM_FIELDS_TO_ID): # pass by reference
     for field in custom_fields_id_dict:
