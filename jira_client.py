@@ -23,7 +23,7 @@ API_HOSTNAME = os.environ['API_HOSTNAME']
 HEADERS = {
     "Accept": "application/json"
 }
-AUTH = HTTPBasicAuth("jeremyspk@gmail.com", os.environ['API_ACCESS_TOKEN'])
+AUTH = HTTPBasicAuth(os.environ['API_REPORTER_EMAIL'], os.environ['API_ACCESS_TOKEN'])
 
 #? Symbols escape list
 TO_ESCAPE_LIST = [{
