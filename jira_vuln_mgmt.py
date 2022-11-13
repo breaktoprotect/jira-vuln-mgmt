@@ -10,6 +10,7 @@ import jira_vuln_model as JIRA_MODEL
 import hashlib
 import datetime
 import pytz
+import sys
 
 #* ***** Core Features *****
 #* Report multiple vuln issues using a list of vuln objects on Jira
@@ -164,6 +165,10 @@ def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CU
 #? Obtain reporter's account ID based on email address
 def get_reporter_account_id(email_address):
     json_data = JIRA_CLIENT.search_users_by_email(email_address)
+
+    if not isinstance(json_data, list):
+        print("[!] Fatal error. The 'json_data' is not a list and needs to be. Dumping 'json_data':", json_data)
+        sys.exit(-1)
 
     return json_data[0]['accountId']
 
