@@ -19,14 +19,21 @@ def main():
     parser.add_argument('-f', '--filename', dest="sarif_filepath", action="store", help="Location and filename of the Sarif file.")
     parser.add_argument('-r', '--reporter-email', dest="jira_reporter_email", action="store", help="Jira user's email as ticket reporter")
     parser.add_argument('-c', '--affected-component', dest="affected_component", action="store", help="Affected component")
+    parser.add_argument('-s', '--finding-source', dest="finding_source", action="store", help="Source of findings (e.g. trivySCA or sonarDAST)")
 
     args = parser.parse_args()
 
     # 2. Execute the workflow
-    workflow(args.sarif_filepath, args.affected_component, args.jira_reporter_email)
+    workflow(args.sarif_filepath, args.affected_component, args.finding_source, args.jira_reporter_email)
 
 #* The Workflow
-def workflow(sarif_filepath, affected_component, reporter_email):
+def workflow(sarif_filepath, affected_component, finding_source, reporter_email):
+    # 0. Verification(s)
+    # Check if finding_source is in camelCase format
+    if not JIRA_VULN.is_camel_case(finding_source):
+        print("[!] Fatal error. The argument -s (--finding-source) is not in camelCase format. Please ensure this is fulfilled to prevent JQL search discrepancies. Please use the following format: aScanner or someScannerTool. For more information, please peruse the 'README.MD'.")
+        return -1
+
     # 1. Retrieve and store Sarif file contents to dict format
     with open(sarif_filepath, 'r') as json_file:
         sarif_data = json.load(json_file)
@@ -42,7 +49,7 @@ def workflow(sarif_filepath, affected_component, reporter_email):
                 result['message']['text'],
                 "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
                 ])
-            finding_source = run['tool']['driver']['name']
+            #finding_source = run['tool']['driver']['name']
             cve_id = this_rule['id']
             raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
             first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
@@ -54,10 +61,11 @@ def workflow(sarif_filepath, affected_component, reporter_email):
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY)  
+    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY, affected_component, finding_source)  
+
 
 #? Helper functions
-#* Process a list of description paragraphs into a proper Atlassian content list of dict 
+#? Process a list of description paragraphs into a proper Atlassian content list of dict 
 def get_description_dict_list(description_list):
     content_dict_list = []
     for index, desc in enumerate(description_list):
@@ -78,7 +86,7 @@ def get_description_dict_list(description_list):
     
     return content_dict_list
 
-#* Process a list of affected locations into lines
+#? Process a list of affected locations into lines
 def get_affected_location_lines(location_list):
     affected_locations = ""
     for location in location_list:
@@ -87,7 +95,7 @@ def get_affected_location_lines(location_list):
 
     return affected_locations
 
-#* Obtain the rule based on ruleId
+#? Obtain the rule based on ruleId
 def get_rule(run_data, rule_id):
     for rule in run_data['tool']['driver']['rules']:
         if rule_id == rule['id']:

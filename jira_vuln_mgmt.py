@@ -13,7 +13,14 @@ import pytz
 
 #* ***** Core Features *****
 #* Report multiple vuln issues using a list of vuln objects on Jira
-def report_vuln_list(vuln_list, project_key):
+def report_vuln_list(vuln_list, project_key, affected_component, finding_source):
+    # 0. Verification(s)
+    # a. Check if both current vuln list and existing issues are both empty
+    existing_issue = get_any_one_existing_issue(affected_component, finding_source)
+    if (not vuln_list) and (not existing_issue):
+        print("[*] No vulnerabilities to report. There are also no existing issues to auto close. Operation exited.")
+        return 0
+
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id(project_key)
 
@@ -30,7 +37,7 @@ def report_vuln_list(vuln_list, project_key):
     update_last_reported_issue_id_list(duplicate_issue_id_list)
 
     # 3. Close vulns that are no longer found
-    fixed_issue_id_list = get_fixed_issue_id_list(vuln_list)
+    fixed_issue_id_list = get_fixed_issue_id_list(vuln_list, affected_component, finding_source)
     if len(fixed_issue_id_list) > 0:
         auto_close_issue_list(fixed_issue_id_list)
 
@@ -99,10 +106,8 @@ def update_last_reported_issue_id_list(issue_id_list):
 
 #* Get findings that are no longer reported this time - delta between current scan and existing Jira issues
 #  Criteria: If issue no longer exist in current scans given that it belongs to the same affected component and it's by the same tool-type (e.g. Trivy-SCA) , it should be closed
-def get_fixed_issue_id_list(this_vuln_list):
+def get_fixed_issue_id_list(this_vuln_list, affected_component, finding_source):
     # Obtain all existing
-    affected_component = this_vuln_list[0].affected_component # Assuming all vuln in the list comes from same component
-    finding_source = this_vuln_list[0].finding_source
     jql = 'project = "vuln" AND "Affected Component[Short text]" ~ "{AFFECTED_COMPONENT}" AND "Finding Source[Short text]" ~ "{FINDING_SOURCE}" AND status NOT IN ("Auto Closed", "Closed") ORDER BY created DESC'.format(AFFECTED_COMPONENT=affected_component, FINDING_SOURCE=finding_source)
     jira_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
 
@@ -124,6 +129,16 @@ def auto_close_issue_list(issue_id_list):
         JIRA_CLIENT.set_status(issue_id, transition_id)
 
     return
+
+#* Get one of any existing issue based on 'affected_component' and 'finding_source'
+def get_any_one_existing_issue(affected_component, finding_source):
+    jql = 'project = "vuln" AND "Affected Component[Short text]" ~ "{AFFECTED_COMPONENT}" AND "Finding Source[Short text]" ~ "{FINDING_SOURCE}" AND status NOT IN ("Auto Closed", "Closed") ORDER BY created DESC'.format(AFFECTED_COMPONENT=affected_component, FINDING_SOURCE=finding_source)
+    jira_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
+
+    if not jira_issues_list:
+        return None
+    else:
+        return jira_issues_list[0]
         
 #? ***** Helper functions *****
 #? Prepare any required information such as field keys, options for each fields, etc. 
@@ -186,6 +201,19 @@ def get_current_date(country="Asia/Singapore"):
     current_date = datetime.datetime.now(timezone).strftime('%Y-%m-%d')
 
     return current_date
+
+#? Check if string is in camelCase format
+def is_camel_case(text):
+    # Alphanumeric check
+    if not text.isalnum():
+        return False
+    
+    # Ensure it contains at least an upper and lower case
+    if text == text.lower() or text == text.upper():
+        return False
+
+    return True
+    
 
 # Potentially usable code in future
 """ def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
