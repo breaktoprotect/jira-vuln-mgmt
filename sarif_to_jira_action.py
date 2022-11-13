@@ -9,9 +9,6 @@ import json
 import jira_vuln_mgmt as JIRA_VULN
 import datetime
 
-#? Config
-PROJECT_KEY = "vuln"
-
 #* Main
 def main():
     # 1. Parse Input(s)
@@ -57,11 +54,11 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
             # Create a Vuln object and add to the reporting list
-            vuln = JIRA_VULN.create_vuln(summary, PROJECT_KEY, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
+            vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    JIRA_VULN.report_vuln_list(vuln_list, PROJECT_KEY, affected_component, finding_source)  
+    JIRA_VULN.report_vuln_list(vuln_list, affected_component, finding_source)  
 
 
 #? Helper functions

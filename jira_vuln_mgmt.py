@@ -14,7 +14,7 @@ import sys
 
 #* ***** Core Features *****
 #* Report multiple vuln issues using a list of vuln objects on Jira
-def report_vuln_list(vuln_list, project_key, affected_component, finding_source):
+def report_vuln_list(vuln_list, affected_component, finding_source):
     # 0. Verification(s)
     # a. Check if both current vuln list and existing issues are both empty
     existing_issue = get_any_one_existing_issue(affected_component, finding_source)
@@ -23,7 +23,7 @@ def report_vuln_list(vuln_list, project_key, affected_component, finding_source)
         return 0
 
     # 1. Initialize by populating all essential values from Jira
-    init_all_fields_id(project_key)
+    init_all_fields_id()
 
     # 2. Duplicate check - ignore vulns that are already reported; update duplicates' 'Last Reported Date'
     no_duplicate_vuln_list = []
@@ -57,8 +57,8 @@ def report_vuln(vuln):
 
 #* Create a vuln instance
 #   reported_date: YYYY-MM-DD
-def create_vuln(summary, project_key, description, reporter_email, source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest):
-    project_id = JIRA_CLIENT.search_project_id(project_key)
+def create_vuln(summary, description, reporter_email, source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest, project_key=CUSTOM.PROJECT_KEY):
+    project_id = JIRA_CLIENT.search_project_id(CUSTOM.PROJECT_KEY)
     reporter_id = get_reporter_account_id(reporter_email)
 
     vuln = JIRA_MODEL.Vuln(
@@ -75,8 +75,6 @@ def create_vuln(summary, project_key, description, reporter_email, source, cve_i
             issue_digest=issue_digest
     )
     return vuln
-
-#* 
 
 #* Duplication check
 #  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
@@ -140,9 +138,9 @@ def get_any_one_existing_issue(affected_component, finding_source):
 #? ***** Helper functions *****
 #? Prepare any required information such as field keys, options for each fields, etc. 
 #  This is to avoid hardcoding specific field keys (e.g. hardcoding customfield_10011 for 'Reported Date' field)
-def init_all_fields_id(PROJECT_KEY):
+def init_all_fields_id(project_key=CUSTOM.PROJECT_KEY):
     # Get the dict of metadata fields
-    metadata_dict = JIRA_CLIENT.get_metadata_create_issue(PROJECT_KEY)
+    metadata_dict = JIRA_CLIENT.get_metadata_create_issue(project_key)
 
     for issuetype in metadata_dict['projects'][0]['issuetypes']:
         meta_fields_dict = issuetype['fields']
@@ -151,25 +149,26 @@ def init_all_fields_id(PROJECT_KEY):
     populate_custom_fields_key(meta_fields_dict)
 
     # Populate issuetype id
-    populate_issuetype_id(PROJECT_KEY)
+    populate_issuetype_id(project_key)
 
 #? Find the key for each of the corresponding field's name
 def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CUSTOM_FIELDS_TO_ID): # pass by reference
-    for field in custom_fields_id_dict:
+    for field in CUSTOM.CUSTOM_FIELDS_TO_ID:
         for meta_field in meta_fields_dict:
             if meta_fields_dict[meta_field]['name'] == field:
-                custom_fields_id_dict[field] = meta_fields_dict[meta_field]['key']
+                CUSTOM.CUSTOM_FIELDS_TO_ID[field] = meta_fields_dict[meta_field]['key']
+                print("[+] Custom Field {FIELD} param key populated.".format(FIELD=field))
     return
 
 #? Find issuetype id for key 'VULN'
-def populate_issuetype_id(key, issue_type_id=CUSTOM.ISSUE_TYPE_ID):
-    key = "vuln"
+def populate_issuetype_id(key):
     projects = JIRA_CLIENT.get_metadata_create_issue(key)['projects']
     for project in projects:
         if project['key'].lower() == key.lower():
             for issue_type in project['issuetypes']:
                 if issue_type['name'] == 'Vulnerability':
-                    issue_type_id = issue_type['id']
+                    CUSTOM.ISSUE_TYPE_ID = issue_type['id']
+                    print("[+] Issue Type ID established:", CUSTOM.ISSUE_TYPE_ID)
 
 #? Obtain reporter's account ID based on email address
 def get_reporter_account_id(email_address):

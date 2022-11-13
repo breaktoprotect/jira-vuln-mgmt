@@ -1,4 +1,7 @@
 #
+#* Project Key (e.g. VULN in the 'VULN-128')
+PROJECT_KEY = "VULN" # Best to keep it in caps
+
 #* Custom fields
 # To be retrieved dynamically from Jira Software (Cloud)
 CUSTOM_FIELDS_TO_ID = {
@@ -30,7 +33,7 @@ FIELD_RAW_SEVERITY_OPTIONS_ID = {
 }
 
 #* ISSUE TYPE ID
-ISSUE_TYPE_ID = None
+ISSUE_TYPE_ID = None # Pleae note: has to be int, not String
 
 #* Transition ID
 TRANSITION_ID = None
