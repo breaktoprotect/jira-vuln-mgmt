@@ -198,10 +198,18 @@ def set_status(issue_id, transition_id):
                 }
             ]
         },
+        "fields": {
+            "resolution": {
+                "name": "Done"
+            }
+        }
 
     }
 
     response = requests.post(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", json=json_post, headers=HEADERS,auth=AUTH)
+
+    #debug
+    print("set_status() - Status: " + str(response.status_code) + " - response.text:", response.text)
 
     if response.status_code < 300:
         return True
@@ -209,6 +217,7 @@ def set_status(issue_id, transition_id):
         return False
 
 #* Update a custom field value of an issue
+# https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/#api-rest-api-3-issue-issueidorkey-put
 def update_issue_custom_field(issue_id, name_of_custom_field, value_of_custom_field):
     json_data = {
         "fields": {

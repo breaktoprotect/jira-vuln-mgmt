@@ -33,3 +33,20 @@ Test Param(s):
 Expected outcome:
 - JQL of affected_component and finding_source issues will all set to AUTO CLOSED.
 - Issue that are already CLOSED, will not be marked AUTO CLOSED.
+
+## 5. Regressed Findings Reopen of issues (as new issues)
+Test Param(s):
+- test_cases/trivy-dockerfile-config_fixed.sarif
+
+Expected outcome:
+- Previously AUTO CLOSED or CLOSED findings untouched
+- Old findings are now opened as new issues
+
+# Other Tests
+## Last Reported Date
+Test Param(s):
+- test_cases/trivy-dockerfile-config.sarif (run yesterday)
+- test_cases/trivy-dockerfile-config_fixed.sarif (run today)
+
+Expected outcome:
+- You should see that the Last Reported Date is reported as today
