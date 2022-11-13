@@ -33,7 +33,9 @@ jobs:
         run: echo ${{ github.ref }}
 
       - name: Install python depedencies
-        run: pipenv sync 
+        run: | 
+          python3 -m pip install --user pipenv 
+          pipenv sync 
 
       - name: Python script to report findings from trivy-results.sarif
         run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r jeremyspk@gmail.com
