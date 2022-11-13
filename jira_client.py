@@ -118,7 +118,7 @@ def get_issue_fields(issue_key):
     return response.json()
 
 #* Create a vulnerability jira issue
-def create_jira_vuln(vuln):
+def create_jira_vuln(vuln, issue_type):
     # Minimum fields to post the jira
     json_post = {
         "fields": {
@@ -134,7 +134,7 @@ def create_jira_vuln(vuln):
                 ]
             },
             "issuetype": {
-                "id": 10008
+                "id": issue_type # for e.g. 10008
             },
             "project": {
                 "id": vuln.project_id
@@ -290,3 +290,11 @@ if __name__ == "__main__":
     transition_id = get_transition_id(issue_id, "Auto Closed")
     print(transition_id) """
     #set_status(issue_id, transition_id)
+    key = "vuln"
+    projects = get_metadata_create_issue(key)['projects']
+    for project in projects:
+        if project['key'].lower() == key.lower():
+            for issue_type in project['issuetypes']:
+                if issue_type['name'] == 'Vulnerability':
+                    print(issue_type['id'])
+

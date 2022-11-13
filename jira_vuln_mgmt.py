@@ -48,11 +48,7 @@ def report_vuln_list(vuln_list, project_key, affected_component, finding_source)
 
 #* Report a single vuln issue on Jira
 def report_vuln(vuln):
-    response = JIRA_CLIENT.create_jira_vuln(vuln)
-
-    #debug
-    print("Vuln() instance:",vuln)
-    print("response status code:", response.status_code)
+    response = JIRA_CLIENT.create_jira_vuln(vuln, CUSTOM.ISSUE_TYPE_ID)
 
     if response.status_code >= 300:
         print("[!] Error reporting vuln. Error response:", response.text)
@@ -162,13 +158,19 @@ def populate_custom_fields_key(meta_fields_dict, custom_fields_id_dict=CUSTOM.CU
                 custom_fields_id_dict[field] = meta_fields_dict[meta_field]['key']
     return
 
+#? Find issuetype id for key 'VULN'
+def populate_issuetype_id(key, issue_type_id=CUSTOM.ISSUE_TYPE_ID):
+    key = "vuln"
+    projects = JIRA_CLIENT.get_metadata_create_issue(key)['projects']
+    for project in projects:
+        if project['key'].lower() == key.lower():
+            for issue_type in project['issuetypes']:
+                if issue_type['name'] == 'Vulnerability':
+                    issue_type_id = issue_type['id']
+
 #? Obtain reporter's account ID based on email address
 def get_reporter_account_id(email_address):
     json_data = JIRA_CLIENT.search_users_by_email(email_address)
-
-    if not isinstance(json_data, list) or len(json_data) < 1:
-        print("[!] Fatal error. The 'json_data' is not a list and needs to be. Dumping 'json_data':", json_data)
-        sys.exit(-1)
 
     return json_data[0]['accountId']
 
@@ -218,6 +220,8 @@ def is_camel_case(text):
         return False
 
     return True
+
+
     
 
 # Potentially usable code in future

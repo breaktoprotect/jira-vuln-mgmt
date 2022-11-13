@@ -29,5 +29,8 @@ FIELD_RAW_SEVERITY_OPTIONS_ID = {
     "None (Informational)": None
 }
 
+#* ISSUE TYPE ID
+ISSUE_TYPE_ID = None
+
 #* Transition ID
 TRANSITION_ID = None
