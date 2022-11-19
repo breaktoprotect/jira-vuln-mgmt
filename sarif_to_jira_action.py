@@ -39,6 +39,8 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
     vuln_list = []
     for run in sarif_data['runs']:
         for result in run['results']:
+            if not run['results']:
+                continue # Skip if there are no results
             this_rule = get_rule(run, result['ruleId'])
             summary = this_rule['shortDescription']['text']
             description = get_description_dict_list([
