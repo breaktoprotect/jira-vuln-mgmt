@@ -39,8 +39,22 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
     vuln_list = []
     for run in sarif_data['runs']:
         for result in run['results']:
+            # Check: Skip if there are no results
             if not run['results']:
-                continue # Skip if there are no results
+                continue 
+            # 1. Codacy style - No rules
+            """ if result['ruleIndex']== -1:
+                summary = result['ruleId'] + ": " + result['message']['text'][:5] + "..."
+                description = get_description_dict_list([
+                    result['message']['text'],
+                    "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
+                ])                
+                #Codacy-style severity
+                cve_id = result['ruleId']
+                raw_severity = codacy_level_to_severity(result['']) """
+
+
+            # 2. Spotbugs? / Trivy style - Have rules
             this_rule = get_rule(run, result['ruleId'])
             summary = this_rule['shortDescription']['text']
             description = get_description_dict_list([
@@ -48,16 +62,15 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
                 result['message']['text'],
                 "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
                 ])
-            #finding_source = run['tool']['driver']['name']
             cve_id = this_rule['id']
             raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
             first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
             last_reported_date = JIRA_VULN.get_current_date()
             issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
-            # Create a Vuln object and add to the reporting list
-            vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
-            vuln_list.append(vuln)
+                # Create a Vuln object and add to the reporting list
+                vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
+                vuln_list.append(vuln)
 
     # 3. Report vulns
     JIRA_VULN.report_vuln_list(vuln_list, affected_component, finding_source)  
@@ -96,9 +109,22 @@ def get_affected_location_lines(location_list):
 
 #? Obtain the rule based on ruleId
 def get_rule(run_data, rule_id):
+    # If rules[] is empty
+    if not run_data['tool']['driver']['rules']:
+        return None
     for rule in run_data['tool']['driver']['rules']:
         if rule_id == rule['id']:
             return rule
+
+#? Translate Codacy level to Severity level
+def codacy_level_to_severity(text):
+    if text == '':
+        return 'Critical'
+    elif text == 'warning':
+        return 'Medium'
+    else:
+        return 'Low'
+
 
 #! for testing only
 if __name__ == "__main__":
