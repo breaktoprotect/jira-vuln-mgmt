@@ -37,8 +37,8 @@ jobs:
       - name: Install python depedencies
         run: python3 -m pip install -r requirements.txt
 
-      - name: Python script to report findings from trivy-results.sarif
-        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
+      - name: Python script to report findings from sarif results
+        run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ secrets.reporter-email }}
         env:
           API_REPORTER_EMAIL: ${{ secrets.reporter-email }}
           API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}

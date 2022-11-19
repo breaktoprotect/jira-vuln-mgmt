@@ -16,7 +16,7 @@ def main():
     parser.add_argument('-f', '--filename', dest="sarif_filepath", action="store", help="Location and filename of the Sarif file.")
     parser.add_argument('-r', '--reporter-email', dest="jira_reporter_email", action="store", help="Jira user's email as ticket reporter")
     parser.add_argument('-c', '--affected-component', dest="affected_component", action="store", help="Affected component")
-    parser.add_argument('-s', '--finding-source', dest="finding_source", action="store", help="Source of findings (e.g. trivySCA or sonarDAST)")
+    parser.add_argument('-s', '--finding-source', dest="finding_source", action="store", help="Source of findings (e.g. trivySCA or codacySAST)")
 
     args = parser.parse_args()
 
