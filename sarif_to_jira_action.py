@@ -112,7 +112,10 @@ def get_affected_location_lines(location_list):
     affected_locations = ""
     for location in location_list:
         affected_locations += location['physicalLocation']['artifactLocation']['uri'] + " "
-        affected_locations += "(from Line: {AFFECTED_START} to {AFFECTED_END})".format(AFFECTED_START=location['physicalLocation']['region']['startLine'], AFFECTED_END=location['physicalLocation']['region']['endLine']) + "\n"
+        if 'endLine' in location['physicalLocation']['region']:
+            affected_locations += "(from Line: {AFFECTED_START} to {AFFECTED_END})".format(AFFECTED_START=location['physicalLocation']['region']['startLine'], AFFECTED_END=location['physicalLocation']['region']['endLine']) + "\n"
+        else:
+            affected_locations += "(from Line: {AFFECTED_START} to {AFFECTED_END})".format(AFFECTED_START=location['physicalLocation']['region']['startLine']) + "\n"
 
     return affected_locations
 
