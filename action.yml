@@ -1,0 +1,45 @@
+name: Report Issue on Jira VULN
+description: 'Report an issue on a Jira Project e.g. VULN-123'
+inputs:
+  artifact-name:
+    required: true
+    type: string
+  finding-source:
+    required: true
+    type: string
+secrets:
+  env-api-host:
+    required: true
+  env-jira-access-token:
+    required: true
+  reporter-email:
+    required: true
+outputs:
+  blah:
+    description: 'not used'
+    value: ${{ steps.blah.outputs.blah }}
+runs:
+  using: "composite"
+  steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+      with:
+        repository: breaktoprotect/jira-vuln-mgmt
+        ref: develop
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.artifact-name }}
+        
+    - name: debug
+      run: echo ${{ github.ref }}
+
+    - name: Install python depedencies
+      run: python3 -m pip install -r requirements.txt
+
+    - name: Python script to report findings from sarif results
+      run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ secrets.reporter-email }}
+      env:
+        API_REPORTER_EMAIL: ${{ secrets.reporter-email }}
+        API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}
+        API_HOSTNAME: ${{ secrets.env-api-host }}
