@@ -1,3 +1,4 @@
+# Github Action
 name: 'Report Issue on Jira VULN'
 description: 'Report an issue on a Jira Project e.g. VULN-123'
 inputs:
@@ -6,7 +7,6 @@ inputs:
     type: string
   finding-source:
     required: true
-secrets:
   env-api-host:
     required: true
   env-jira-access-token:
