@@ -58,7 +58,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
                 ])                
                 #Codacy-style severity
                 cve_id = result['ruleId']
-                raw_severity = codacy_level_to_severity(result[''])
+                raw_severity = codacy_level_to_severity(result['level'])
 
             # 2.  Trivy style 
             elif run['tool']['driver']['name'] in supported_style_two:
@@ -73,9 +73,11 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
                     ])
                 cve_id = this_rule['id']
                 raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
-                first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
-                last_reported_date = JIRA_VULN.get_current_date()
-                issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
+
+            # Prepare Generic fields (e.g. dates, digest, etc)
+            first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
+            last_reported_date = JIRA_VULN.get_current_date()
+            issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
             # Create a Vuln object and add to the reporting list
             vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
@@ -115,7 +117,7 @@ def get_affected_location_lines(location_list):
         if 'endLine' in location['physicalLocation']['region']:
             affected_locations += "(from Line: {AFFECTED_START} to {AFFECTED_END})".format(AFFECTED_START=location['physicalLocation']['region']['startLine'], AFFECTED_END=location['physicalLocation']['region']['endLine']) + "\n"
         else:
-            affected_locations += "(from Line: {AFFECTED_START} to {AFFECTED_END})".format(AFFECTED_START=location['physicalLocation']['region']['startLine']) + "\n"
+            affected_locations += "(from Line: {AFFECTED_START})".format(AFFECTED_START=location['physicalLocation']['region']['startLine']) + "\n"
 
     return affected_locations
 
