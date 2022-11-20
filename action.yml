@@ -24,16 +24,12 @@ runs:
       with:
         name: ${{ inputs.artifact-name }}
 
-    - name: debug ls -alh
-      run: ls -alh
-      shell: bash
-
     - name: Install python depedencies
-      run: python3 -m pip install -r requirements.txt
+      run: python3 -m pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
     - name: Python script to report findings from sarif results
-      run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
+      run: python3 ${{ github.action_path }}/sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
       env:
         API_REPORTER_EMAIL: ${{ inputs.reporter-email }}
         API_ACCESS_TOKEN: ${{ inputs.env-jira-access-token }}
