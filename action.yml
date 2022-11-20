@@ -1,4 +1,5 @@
-name: Report Issue on Jira VULN
+# Github Action
+name: 'Report Issue on Jira VULN Mgmt'
 description: 'Report an issue on a Jira Project e.g. VULN-123'
 inputs:
   artifact-name:
@@ -6,8 +7,6 @@ inputs:
     type: string
   finding-source:
     required: true
-    type: string
-secrets:
   env-api-host:
     required: true
   env-jira-access-token:
@@ -21,25 +20,22 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-      with:
-        repository: breaktoprotect/jira-vuln-mgmt
-        ref: develop
-
     - uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}
-        
-    - name: debug
-      run: echo ${{ github.ref }}
+
+    - name: debug ls -alh
+      run: ls -alh
+      shell: bash
 
     - name: Install python depedencies
       run: python3 -m pip install -r requirements.txt
+      shell: bash
 
     - name: Python script to report findings from sarif results
-      run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ secrets.reporter-email }}
+      run: python3 sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
       env:
-        API_REPORTER_EMAIL: ${{ secrets.reporter-email }}
-        API_ACCESS_TOKEN: ${{ secrets.env-jira-access-token }}
-        API_HOSTNAME: ${{ secrets.env-api-host }}
+        API_REPORTER_EMAIL: ${{ inputs.reporter-email }}
+        API_ACCESS_TOKEN: ${{ inputs.env-jira-access-token }}
+        API_HOSTNAME: ${{ inputs.env-api-host }}
+      shell: bash

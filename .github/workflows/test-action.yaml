@@ -1,0 +1,52 @@
+name: CI with Trivy Repo Scan -> Jira Vuln Management
+
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  trivy-repo-scan:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      #- uses: actions/checkout@v3
+
+      # Trivy Config scan for Dockerfiles
+      - name: Run Trivy - Dockerfile configuration scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'repo'
+          scan-ref: 'https://github.com/breaktoprotect/test-pipeline-alpha/'
+          trivy-config: trivy.yaml
+          format: 'sarif'
+          output: 'trivy-repo-scan.sarif'
+      # Upload artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-repo-scan.sarif
+          path: trivy-repo-scan.sarif
+          retention-days: 30
+         
+      # Use custom Jira vuln reporter
+  report-vuln-findings-to-jira:
+    needs: trivy-repo-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: breaktoprotect/jira-vuln-mgmt@v2-local
+        with:
+          artifact-name: 'trivy-repo-scan.sarif'
+          finding-source: "trivyConfigScan"
+          reporter-email: "jeremyspk@gmail.com"
+          env-api-host: ${{ secrets.JIRA_API_HOSTNAME }}
+          env-jira-access-token: ${{ secrets.JIRA_ACCESS_TOKEN }}
