@@ -25,16 +25,18 @@ runs:
         name: ${{ inputs.artifact-name }}
 
     - name: Install python depedencies
-      run: python3 -m pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
-
+      run: python3 -m pip install -r ${{ github.action_path }}/requirements.txt
+      
     - name: Load environment variables
+      shell: bash
       run: |
         echo "API_REPORTER_EMAIL=${{ inputs.reporter-email }}" >> $GITHUB_ENV
         echo "API_ACCESS_TOKEN=${{ inputs.env-jira-access-token }}" >> $GITHUB_ENV
         echo "API_HOSTNAME=${{ inputs.env-apit-host }}" >> $GITHUB_ENV
       
     - name: Python script to report findings from sarif results
+      shell: bash
       run: python3 ${{ github.action_path }}/sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
 
-      shell: bash
+      
