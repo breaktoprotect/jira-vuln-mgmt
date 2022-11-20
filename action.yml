@@ -23,9 +23,9 @@ runs:
     - uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}
-        
-    - name: debug
-      run: echo ${{ github.ref }}
+
+    - name: debug ls -alh
+      run: ls -alh
       shell: bash
 
     - name: Install python depedencies
