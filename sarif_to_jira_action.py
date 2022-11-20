@@ -77,9 +77,9 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
                 last_reported_date = JIRA_VULN.get_current_date()
                 issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
-                # Create a Vuln object and add to the reporting list
-                vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
-                vuln_list.append(vuln)
+            # Create a Vuln object and add to the reporting list
+            vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
+            vuln_list.append(vuln)
 
     # 3. Report vulns
     JIRA_VULN.report_vuln_list(vuln_list, affected_component, finding_source)  
