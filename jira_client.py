@@ -177,7 +177,7 @@ def get_transition_id(issue_id, name_of_transition):
     return -1
 
 #* Perform Workflow Transition to change status via Transition ID (e.g. Auto Closed)
-def set_status(issue_id, transition_id):
+def set_status_auto_closed(issue_id, transition_id):
     json_post = {
         "transition": {
             "id": transition_id
@@ -211,13 +211,55 @@ def set_status(issue_id, transition_id):
                 "name": "Done"
             }
         }
-
     }
 
     response = requests.post(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", json=json_post, headers=HEADERS,auth=AUTH)
 
     #debug
-    print("set_status() - Status: " + str(response.status_code) + " - response.text:", response.text)
+    print("set_status_auto_closed() - Status: " + str(response.status_code) + " - response.text:", response.text)
+
+    if response.status_code < 300:
+        return True
+    else:
+        return False
+
+#* Perform Workflow Transition to change status via Transition ID (e.g. Open)
+#  Note that regressed issue the 'Resolution' will remain 'Done' and will not revert. 
+#  This will also serve as an indicator of an issue that was once closed and now it's opened again. 
+def set_status_open(issue_id, transition_id):
+    json_post = {
+        "transition": {
+            "id": transition_id
+        },
+        "update": {
+            "comment": [
+                {
+                    "add": {
+                        "body": {
+                            "type": "doc",
+                            "version": 1,
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [
+                                        {
+                                            "text": "Issue is now being found once again, and has been automatically regressed to open.",
+                                            "type": "text"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+    }
+
+    response = requests.post(API_HOSTNAME + API_ISSUE + issue_id + "/transitions", json=json_post, headers=HEADERS,auth=AUTH)
+
+    #debug
+    print("set_status_open() - Status: " + str(response.status_code) + " - response.text:", response.text)
 
     if response.status_code < 300:
         return True
