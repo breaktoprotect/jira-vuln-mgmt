@@ -42,31 +42,38 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
             # Check: Skip if there are no results
             if not run['results']:
                 continue 
-            # 1. Codacy style - No rules
-            """ if result['ruleIndex']== -1:
-                summary = result['ruleId'] + ": " + result['message']['text'][:5] + "..."
+            # 0. Define supported data extract style
+            supported_style_one = ['Spotbugs (reported by Codacy)']
+            supported_style_two = ['Trivy']
+
+            # 1. Spotbugs(Codacy) style - No rules
+            if run['tool']['driver']['name'] in supported_style_one:
+                this_rule = get_rule(run, result['ruleId'])
+                summary = this_rule['name']
                 description = get_description_dict_list([
                     result['message']['text'],
+                    this_rule['help']['markdown'],
                     "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
                 ])                
                 #Codacy-style severity
                 cve_id = result['ruleId']
-                raw_severity = codacy_level_to_severity(result['']) """
+                raw_severity = codacy_level_to_severity(result[''])
 
-
-            # 2. Spotbugs? / Trivy style - Have rules
-            this_rule = get_rule(run, result['ruleId'])
-            summary = this_rule['shortDescription']['text']
-            description = get_description_dict_list([
-                this_rule['fullDescription']['text'], 
-                result['message']['text'],
-                "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
-                ])
-            cve_id = this_rule['id']
-            raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
-            first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
-            last_reported_date = JIRA_VULN.get_current_date()
-            issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
+            # 2.  Trivy style 
+            elif run['tool']['driver']['name'] in supported_style_two:
+                this_rule = get_rule(run, result['ruleId'])
+                summary = this_rule['shortDescription']['text']
+                description = get_description_dict_list([
+                    this_rule['fullDescription']['text'], 
+                    this_rule['help']['text'],
+                    result['message']['text'],
+                    "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
+                    ])
+                cve_id = this_rule['id']
+                raw_severity = JIRA_VULN.severity_num_to_qualitative(float(this_rule['properties']['security-severity']))
+                first_reported_date = JIRA_VULN.get_current_date() # Default is GMT +8 "Asia/Singapore"
+                last_reported_date = JIRA_VULN.get_current_date()
+                issue_digest = JIRA_VULN.calc_issue_digest(summary, description, cve_id, affected_component)
 
                 # Create a Vuln object and add to the reporting list
                 vuln = JIRA_VULN.create_vuln(summary, description, reporter_email, finding_source, cve_id, raw_severity, first_reported_date, last_reported_date, affected_component, issue_digest)
