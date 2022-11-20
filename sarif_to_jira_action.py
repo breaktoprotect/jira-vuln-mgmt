@@ -48,6 +48,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
 
             # 1. Spotbugs(Codacy) style - No rules
             if run['tool']['driver']['name'] in supported_style_one:
+                print("[*] Using Style One {SUPPORTED_STYLE} data extraction method".format(SUPPORTED_STYLE=str(supported_style_one)))
                 this_rule = get_rule(run, result['ruleId'])
                 summary = this_rule['name']
                 description = get_description_dict_list([
@@ -61,6 +62,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
 
             # 2.  Trivy style 
             elif run['tool']['driver']['name'] in supported_style_two:
+                print("[*] Using Style Two {SUPPORTED_STYLE} data extraction method".format(SUPPORTED_STYLE=str(supported_style_two)))
                 this_rule = get_rule(run, result['ruleId'])
                 summary = this_rule['shortDescription']['text']
                 description = get_description_dict_list([
