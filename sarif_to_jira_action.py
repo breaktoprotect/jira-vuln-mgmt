@@ -50,6 +50,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
             if run['tool']['driver']['name'] in supported_style_one:
                 print("[*] Using Style One {SUPPORTED_STYLE} data extraction method".format(SUPPORTED_STYLE=str(supported_style_one)))
                 this_rule = get_rule(run, result['ruleId'])
+
                 summary = this_rule['name']
                 description = get_description_dict_list([
                     result['message']['text'],
@@ -64,6 +65,7 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
             elif run['tool']['driver']['name'] in supported_style_two:
                 print("[*] Using Style Two {SUPPORTED_STYLE} data extraction method".format(SUPPORTED_STYLE=str(supported_style_two)))
                 this_rule = get_rule(run, result['ruleId'])
+                
                 summary = this_rule['shortDescription']['text']
                 description = get_description_dict_list([
                     this_rule['fullDescription']['text'], 
@@ -132,12 +134,14 @@ def get_rule(run_data, rule_id):
 
 #? Translate Codacy level to Severity level
 def codacy_level_to_severity(text):
-    if text == '':
+    if text == 'error':
         return 'Critical'
     elif text == 'warning':
         return 'Medium'
-    else:
+    elif text == '':
         return 'Low'
+    else:
+        return 'Informational'
 
 
 #! for testing only

@@ -26,16 +26,23 @@ def report_vuln_list(vuln_list, affected_component, finding_source):
     init_all_fields_id()
 
     # 2. Duplicate check - ignore vulns that are already reported; update duplicates' 'Last Reported Date'
-    no_duplicate_vuln_list = []
+    duplicate_issues_list, closed_duplicate_issues_list = get_list_of_duplicate_issues(vuln_list)
+
+    if duplicate_issues_list or closed_duplicate_issues_list:
+        new_vuln_list = get_new_issues_list(vuln_list, duplicate_issues_list, closed_duplicate_issues_list)
+        update_last_reported_issues_list(duplicate_issues_list)
+        reopen_status_issue_id_list(closed_duplicate_issues_list)
+    else:
+        new_vuln_list = [] 
+
+    """ no_duplicate_vuln_list = []
     duplicate_issue_id_list = []
     for vuln in vuln_list:
-        value = is_duplicate_finding(vuln)
+        value = get_duplicate_issue(vuln)
         if not value:
             no_duplicate_vuln_list.append(vuln)
         else:
-            duplicate_issue_id_list.append(value)
-
-    update_last_reported_issue_id_list(duplicate_issue_id_list)
+            duplicate_issue_id_list.append(value) """
 
     # 3. Close vulns that are no longer found
     fixed_issue_id_list = get_fixed_issue_id_list(vuln_list, affected_component, finding_source)
@@ -43,7 +50,7 @@ def report_vuln_list(vuln_list, affected_component, finding_source):
         auto_close_issue_list(fixed_issue_id_list)
 
     # 4. Report each vuln on the list
-    for vuln in no_duplicate_vuln_list:
+    for vuln in new_vuln_list:
         report_vuln(vuln)
 
 #* Report a single vuln issue on Jira
@@ -80,11 +87,11 @@ def create_vuln(summary, description, reporter_email, source, cve_id, raw_severi
 #  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
 #  Enhanced criteria: Ignores 'Auto Closed' or 'Closed' - not considered as duplicate and a new issue will be created.
 #TODO currently it is 1 new issue per request to verify existence of existing finding - is there a better way?
-def is_duplicate_finding(vuln):
+def get_duplicate_issue(vuln):
     this_issue_digest = calc_issue_digest(vuln.summary, vuln.description, vuln.cve_id, vuln.affected_component)
 
-    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status NOT IN ("Auto Closed", "Closed")'.format(DIGEST=this_issue_digest))
-
+    #response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}" AND status NOT IN ("Auto Closed", "Closed")'.format(DIGEST=this_issue_digest))
+    response = JIRA_CLIENT.jql_search_issues('project = "VULN" AND "Issue Digest[Short text]" ~ "{DIGEST}"'.format(DIGEST=this_issue_digest)) # Get all issues of this digest
     # Check if issue existed
     if 'issues' in response.json().keys():
         if len(response.json()['issues']) > 0:
@@ -92,12 +99,65 @@ def is_duplicate_finding(vuln):
         else:
             return False
 
-#* Update the list of vuln's 'Last Reported Date' field with current time
-def update_last_reported_issue_id_list(issue_id_list):
-    for issue_id in issue_id_list:
-        JIRA_CLIENT.update_issue_custom_field(issue_id, "Last Reported Date", get_current_date())
+#* Duplication check V2
+#  Criteria: If issue has the same cve/vuln ID on the same component on the same line, consider it as a duplicate
+def get_list_of_duplicate_issues(vuln_list):
+    # Verify that it's not empty
+    if len(vuln_list) < 1:
+        return None, None
 
+    # 1. Get list of issues belonging to the same affected component and finding source
+    jql = 'project = "VULN" AND "Affected Component[Short text]" ~ {AFFECTED_COMPONENT} AND "Finding Source[Short text]" ~ {FINDING_SOURCE}'.format(AFFECTED_COMPONENT=vuln_list[0].affected_component, FINDING_SOURCE=vuln_list[0].finding_source)
+    issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql)
+
+    # 2. Create two list - one duplicate list (non-closed issues) ; another duplicate list of issues that 'Auto Closed' / 'Closed'
+    duplicate_issues = []
+    closed_duplicate_issues = []
+    for issue in issues_list:
+        for vuln in vuln_list:
+            if issue['fields'][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] == vuln.issue_digest:           
+                # If status is 'OPEN'
+                if issue['fields']['status']['name'] == 'Open':
+                    duplicate_issues.append(issue)            
+
+                # if status is 'AUTO CLOSED' or 'CLOSED'
+                if issue['fields']['status']['name'] in ['Auto Closed', 'Closed']:
+                    closed_duplicate_issues.append(issue)      
+
+    return duplicate_issues, closed_duplicate_issues
+
+#* Get list of new issues by comparing current vuln_list with duplicate issues list
+def get_new_issues_list(vuln_list, duplicate_issues_list, closed_dup_issues_list):
+    first_pass_vuln_list = []
+    for vuln in vuln_list:
+        if not vuln.issue_digest in list(map(lambda issue: issue['fields'][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']], duplicate_issues_list)):
+            first_pass_vuln_list.append(vuln)
+
+    final_pass_vuln_list = []
+    for vuln in first_pass_vuln_list:
+        if not vuln.issue_digest in list(map(lambda issue: issue['fields'][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']], closed_dup_issues_list)):
+            final_pass_vuln_list.append(vuln)
+
+    return final_pass_vuln_list
+
+#* Update the list of vuln's 'Last Reported Date' field with current time
+def update_last_reported_issues_list(dup_issues_list):
+    for issue_id in list(map(lambda issue: issue['id'], dup_issues_list)):
+        # Update the 'Last Reported Date'
+        JIRA_CLIENT.update_issue_custom_field(issue_id, "Last Reported Date", get_current_date())
     return
+
+#* Update the list of vuln's if status is 'AUTO CLOSED' or 'CLOSED', set it to 'OPEN'
+def reopen_status_issue_id_list(closed_dup_issue_list):
+    # Check if list is empty, if not get the transition_id for 'Open'
+    if closed_dup_issue_list:
+        transition_id = JIRA_CLIENT.get_transition_id(closed_dup_issue_list[0]['id'],'Open')
+    else:
+        return
+
+    for issue_id in list(map(lambda issue: issue['id'], closed_dup_issue_list)):
+        JIRA_CLIENT.set_status_open(issue_id, transition_id)
+    return    
 
 #* Get findings that are no longer reported this time - delta between current scan and existing Jira issues
 #  Criteria: If issue no longer exist in current scans given that it belongs to the same affected component and it's by the same tool-type (e.g. Trivy-SCA) , it should be closed
@@ -121,7 +181,7 @@ def auto_close_issue_list(issue_id_list):
     transition_id = JIRA_CLIENT.get_transition_id(issue_id_list[0], "Auto Closed")
 
     for issue_id in issue_id_list:
-        JIRA_CLIENT.set_status(issue_id, transition_id)
+        JIRA_CLIENT.set_status_auto_closed(issue_id, transition_id)
 
     return
 
@@ -223,22 +283,6 @@ def is_camel_case(text):
 
     return True
 
-
-    
-
-# Potentially usable code in future
-""" def populate_source_options_id(meta_fields_dict, field_source_options_id=CUSTOM.FIELD_SOURCE_OPTIONS_ID):
-    # Get 'Source' field's key (customfield_...)
-    Source_key = CUSTOM.CUSTOM_FIELDS_TO_ID['Source']
-
-    # Find the id for each of the corresponding source field options
-    for key in field_source_options_id:
-        if key in meta_fields_dict[Source_key]['allowedValues']:
-            continue # skip if field is not currently added/supported to 'Source' in Jira software
-        for option in meta_fields_dict[Source_key]['allowedValues']:
-            if key == option['value']:
-                field_source_options_id[key] = option['id']
-"""
 #! Testing only
 if __name__ == "__main__":
     init_all_fields_id("VULN")
