@@ -32,8 +32,9 @@ def report_vuln_list(vuln_list, affected_component, finding_source):
         new_vuln_list = get_new_issues_list(vuln_list, duplicate_issues_list, closed_duplicate_issues_list)
         update_last_reported_issues_list(duplicate_issues_list)
         reopen_status_issue_id_list(closed_duplicate_issues_list)
+    # Assuming no dups and no closed dups, but vuln_list is not empty, means it's from new finding source or affected component
     else:
-        new_vuln_list = [] 
+        new_vuln_list = vuln_list 
 
     """ no_duplicate_vuln_list = []
     duplicate_issue_id_list = []
