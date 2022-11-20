@@ -43,7 +43,7 @@ jobs:
     needs: trivy-repo-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: breaktoprotect/jira-vuln-mgmt@v0.2.2-beta
+      - uses: breaktoprotect/jira-vuln-mgmt@v0.2.3-beta
         with:
           artifact-name: 'trivy-repo-scan.sarif'
           finding-source: "trivyConfigScan"
