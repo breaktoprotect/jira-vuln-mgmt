@@ -7,6 +7,8 @@ inputs:
     type: string
   finding-source:
     required: true
+  affected-component:
+    required: true
   env-api-host:
     required: true
   env-jira-access-token:
@@ -41,6 +43,6 @@ runs:
       
     - name: Python script to report findings from sarif results
       shell: bash
-      run: python3 ${{ github.action_path }}/sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ github.repository }}@${{ github.ref_name }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
+      run: python3 ${{ github.action_path }}/sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ inputs.affected-component }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
 
       
