@@ -33,7 +33,11 @@ runs:
       run: |
         echo "API_REPORTER_EMAIL=${{ inputs.reporter-email }}" >> $GITHUB_ENV
         echo "API_ACCESS_TOKEN=${{ inputs.env-jira-access-token }}" >> $GITHUB_ENV
-        echo "API_HOSTNAME=${{ inputs.env-apit-host }}" >> $GITHUB_ENV
+        echo "API_HOSTNAME=${{ inputs.env-api-host }}" >> $GITHUB_ENV
+
+    - name: Debug echo env
+      shell: bash
+      run: echo $API_HOSTNAME
       
     - name: Python script to report findings from sarif results
       shell: bash
