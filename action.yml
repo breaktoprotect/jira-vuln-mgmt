@@ -1,5 +1,5 @@
 # Github Action
-name: 'Report Issue on Jira VULN'
+name: 'Report Issue on Jira VULN Mgmt'
 description: 'Report an issue on a Jira Project e.g. VULN-123'
 inputs:
   artifact-name:
