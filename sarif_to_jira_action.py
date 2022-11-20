@@ -69,7 +69,6 @@ def workflow(sarif_filepath, affected_component, finding_source, reporter_email)
                 summary = this_rule['shortDescription']['text']
                 description = get_description_dict_list([
                     this_rule['fullDescription']['text'], 
-                    this_rule['help']['text'],
                     result['message']['text'],
                     "Impacted artifact(s): \n" + get_affected_location_lines(result['locations'])
                     ])
