@@ -2,9 +2,10 @@
 name: 'Report Issue on Jira VULN Mgmt'
 description: 'Report an issue on a Jira Project e.g. VULN-123'
 inputs:
+  format-type:
+    required: true
   artifact-name:
     required: true
-    type: string
   finding-source:
     required: true
   affected-component:
@@ -26,7 +27,7 @@ runs:
       with:
         name: ${{ inputs.artifact-name }}
 
-    - name: Install python depedencies
+    - name: Install python dependencies
       shell: bash
       run: python3 -m pip install -r ${{ github.action_path }}/requirements.txt
       
@@ -43,6 +44,6 @@ runs:
       
     - name: Python script to report findings from sarif results
       shell: bash
-      run: python3 ${{ github.action_path }}/sarif_to_jira_action.py -f ${{ inputs.artifact-name }} -c ${{ inputs.affected-component }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
+      run: python3 ${{ github.action_path }}/report_issue.py -t ${{ inputs.format-type }} -f ${{ inputs.artifact-name }} -c ${{ inputs.affected-component }} -s ${{ inputs.finding-source}} -r ${{ inputs.reporter-email }}
 
       

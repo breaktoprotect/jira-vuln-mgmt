@@ -24,6 +24,7 @@ def report_vuln_list(vuln_list, affected_component, finding_source):
 
     # 1. Initialize by populating all essential values from Jira
     init_all_fields_id()
+    print("[*] Jira Key set to:" + CUSTOM.PROJECT_KEY)
 
     # 2. Duplicate check - ignore vulns that are already reported; update duplicates' 'Last Reported Date'
     duplicate_issues_list, closed_duplicate_issues_list = get_list_of_duplicate_issues(vuln_list)
@@ -59,7 +60,8 @@ def report_vuln(vuln):
     response = JIRA_CLIENT.create_jira_vuln(vuln, CUSTOM.ISSUE_TYPE_ID)
 
     if response.status_code >= 300:
-        print("[!] Error reporting vuln. Error response:", response.text)
+        print("[!] Fatal error. Error reporting vuln. Error response:", response.text)
+        sys.exit(-1)
     else:
         print("[*] Created. Response:", response.text)
 
@@ -286,29 +288,6 @@ def is_camel_case(text):
 
 #! Testing only
 if __name__ == "__main__":
+    # For debugging purpose
     init_all_fields_id("VULN")
     print(CUSTOM.CUSTOM_FIELDS_TO_ID)
-
-    # Get all issues
-    """ 
-    query = ""
-    all_issues_list = JIRA_CLIENT.jql_search_issues('project="VULN" AND status != "Closed"')
-    print(all_issues_list)
-    print("length of all_issue_list:", len(all_issues_list)) """
-
-    # Test
-    """ project_id = JIRA_CLIENT.search_project_id("vuln")
-    vuln = JIRA_MODEL.Vuln(project_id='10001', summary='DS002_Misconfiguration', description=[{'type': 'text', 'text': 'Running containers with &#39;root&#39; user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a &#39;USER&#39; statement to the Dockerfile.'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Artifact: Dockerfile\nType: dockerfile\nVulnerability DS002\nSeverity: HIGH\nMessage: Specify at least 1 USER command in Dockerfile with non-root user as argument\nLink: [DS002](https://avd.aquasec.com/misconfig/ds002)'}, {'type': 'text', 'text': '\n\n'}, {'type': 'text', 'text': 'Affected component: \nDockerfile (from Line: 1 to 1)\n'}], reporter_id='5b2f82cc55b2312db2b866e6', finding_source='Trivy', cve_id='DS002', raw_severity='High', first_reported_date='2022-11-03', affected_component='App A', issue_digest="cd4047db6316da4f66dcbaa5f546796bcdf9bf063b41f45c174a3047d8df003d")
-
-    print("is_duplicate_finding():", is_duplicate_finding(vuln)) """
-    
-
-    # Test get_all_jira_issues(project_key)
-    """ import json
-    jql = 'project = "{PROJECT_KEY}" AND "Affected Component[Short text]" ~ "breaktoprotect/test-pipeline-alpha@main" ORDER BY created DESC'.format(PROJECT_KEY="vuln")
-    all_issues_list = JIRA_CLIENT.jql_get_all_jira_issues(jql, field_list=[CUSTOM.CUSTOM_FIELDS_TO_ID["Issue Digest"]])
-    print(all_issues_list)
-    print("length of all_issues_list:", len(all_issues_list)) """
-
-    issue_id = "10201"
-    JIRA_CLIENT.update_issue_custom_field(issue_id, "Last Reported Date", datetime.datetime.utcnow().strftime('%Y-%m-%d'))

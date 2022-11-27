@@ -161,6 +161,12 @@ def create_jira_vuln(vuln, issue_type):
 
     response = requests.post(API_HOSTNAME + API_ISSUE, json=json_post, headers=this_headers,auth=AUTH)
 
+    # Error handling
+    if not response.status_code < 300:
+        print("[!] Fatal error. Failed to create Jira issue. Status code: {STATUS_CODE}, Response: {RESPONSE}".format(STATUS_CODE=response.status_code, RESPONSE=response.text))
+        print("[-] Dumping json_post parameters:", str(json_post))
+        sys.exit(-1)
+
     return response
 
 #* Get Workflow Transition ID for a specific transition
@@ -285,12 +291,18 @@ def html_unescape_list_field(the_list):
     unescaped_list = []
     for text in the_list:
         field_dict = {}
-        for field in text:
-            # Custom Escape list 
-            for to_escape in TO_ESCAPE_LIST:
-                field_dict[field] = text[field].replace(to_escape['original'], to_escape['replacement'])
+        for field_name in text:
+            # Check if field isn't string (text)
+            if field_name != 'text':
+                # Skip it - no replacement
+                field_dict[field_name] = text[field_name]
+                continue
 
-            field_dict[field] = html.unescape(field_dict[field])
+            #* Custom Escape list 
+            for to_escape in TO_ESCAPE_LIST:
+                field_dict[field_name] = text[field_name].replace(to_escape['original'], to_escape['replacement'])
+
+            field_dict[field_name] = html.unescape(field_dict[field_name])
 
         unescaped_list.append(field_dict)
     
@@ -325,18 +337,5 @@ def jql_get_all_jira_issues(jql, field_list=["*all"]):
 
 #! Testing only
 if __name__ == "__main__":
-    pass
-
-    # Test Get Transitions
-    """ issue_id = "10203"
-    transition_id = get_transition_id(issue_id, "Auto Closed")
-    print(transition_id) """
-    #set_status(issue_id, transition_id)
     key = "vuln"
-    projects = get_metadata_create_issue(key)['projects']
-    for project in projects:
-        if project['key'].lower() == key.lower():
-            for issue_type in project['issuetypes']:
-                if issue_type['name'] == 'Vulnerability':
-                    print(issue_type['id'])
-
+    pass
