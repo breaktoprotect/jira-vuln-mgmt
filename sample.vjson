@@ -1,0 +1,15 @@
+{
+    "format": "vjson",
+    "results": [
+        {
+            "summary": "PATH_TRAVERSAL_IN - This API (java/io/File.<init>(...",
+            "description": [
+                "This API (java/io/File.<init>(Ljava/lang/String;)V) reads a file whose location might be specified by user input",
+                "A file is opened to read its content. The filename comes from an input parameter. If an unfiltered parameter is passed to this file API, files from an arbitrary filesystem location could be read.This rule identifies potential path traversal vulnerabilities. In many cases, the constructed file path cannot be controlled by the user. If that is the case, the reported instance is a false positive.\nFor further information, please visit https://find-sec-bugs.github.io/bugs.htm#PATH_TRAVERSAL_IN",
+                "Affected artifact(s):\nsrc/main/java/com/partior/signer/config/HashicorpConfig.java - sslConfig = sslConfig.pemFile(new File(certPath)); (Line: 83)"
+            ],
+            "cve_id": "PATH_TRAVERSAL_IN",
+            "raw_severity": "Critical"
+        }
+    ]
+}
