@@ -119,9 +119,11 @@ def get_list_of_duplicate_issues(vuln_list):
     for issue in issues_list:
         for vuln in vuln_list:
             if issue['fields'][CUSTOM.CUSTOM_FIELDS_TO_ID['Issue Digest']] == vuln.issue_digest:           
-                # If status is 'OPEN'
-                if issue['fields']['status']['name'] == 'Open':
+                # If status is 'OPEN', 'False Positive', etc 
+                if not issue['fields']['status']['name'] in ['Auto Closed', 'Closed']:
                     duplicate_issues.append(issue)            
+                #if issue['fields']['status']['name'] == "Open":
+                #    duplicate_issues.append(issue)       
 
                 # if status is 'AUTO CLOSED' or 'CLOSED'
                 if issue['fields']['status']['name'] in ['Auto Closed', 'Closed']:
