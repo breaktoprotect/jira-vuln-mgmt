@@ -124,10 +124,7 @@ def sarif_workflow(filepath, affected_component, finding_source, reporter_email)
             vuln_list.append(vuln)
 
     # 3. Report vulns
-    #JIRA_VULN.report_vuln_list(vuln_list, affected_component, finding_source)  
-
-    #debug
-    print(vuln_list)
+    JIRA_VULN.report_vuln_list(vuln_list, affected_component, finding_source)  
 
 #? Helper functions
 #? Process a list of description paragraphs into a proper Atlassian content list of dict 
